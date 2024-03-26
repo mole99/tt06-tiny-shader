@@ -32,11 +32,8 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Install pillow
-        run: pip install pillow
-
       - name: GL test
-        uses: TinyTapeout/tt-gds-action/gl_test@tt06
+        uses: mole99/tt-gds-action/gl_test@main
 
   viewer:
     needs: gds

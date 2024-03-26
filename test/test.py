@@ -100,6 +100,6 @@ async def test_vga(dut):
     dut._log.info("Test")
 
     image = await taks_draw_frame.join()
-    image.save(f"test1.png")
+    image.save(f"frame.png")
 
     await ClockCycles(dut.clk, 10)
