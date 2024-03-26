@@ -24,6 +24,9 @@ jobs:
           cocotb-config --libpython
           cocotb-config --python-bin
 
+      - name: Install pillow
+        run: pip install pillow
+
       - name: Run tests
         run: |
           cd test
