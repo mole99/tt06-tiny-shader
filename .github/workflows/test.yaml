@@ -41,12 +41,12 @@ jobs:
           paths: "test/results.xml"
         if: always()
 
-      - name: upload vcd and image
+      - name: Upload FST and image
         if: success() || failure()
         uses: actions/upload-artifact@v4
         with:
-          name: test-vcd
+          name: test-fst
           path: |
-            test/tb.vcd
-            test/result.xml
+            test/tb.fst
+            test/results.xml
             test/frame.png
