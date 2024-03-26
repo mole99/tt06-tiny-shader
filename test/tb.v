@@ -10,10 +10,12 @@ module tb ();
     initial begin
     $dumpfile("tb.fst");
     $dumpvars(0, tb);
+    `ifndef GL_TEST
     $dumpvars(0, tb.tt_um_tiny_shader_mole99_inst.tiny_shader_top_inst.shader_execute_inst.regs[0]);
     $dumpvars(0, tb.tt_um_tiny_shader_mole99_inst.tiny_shader_top_inst.shader_execute_inst.regs[1]);
     $dumpvars(0, tb.tt_um_tiny_shader_mole99_inst.tiny_shader_top_inst.shader_execute_inst.regs[2]);
     $dumpvars(0, tb.tt_um_tiny_shader_mole99_inst.tiny_shader_top_inst.shader_execute_inst.regs[3]);
+    `endif
     #1;
     end
 
