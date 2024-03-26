@@ -5,12 +5,12 @@
 `default_nettype none
 
 module timing #(
-    parameter RESOLUTION,   // resolution of the active pixel
-    parameter FRONT_PORCH,  // number of front porch pixel
-    parameter SYNC_PULSE,   // number of sync pulse pixel
-    parameter BACK_PORCH,   // number of back porch pixel
-    parameter TOTAL,        // everything summed up
-    parameter POLARITY
+    parameter RESOLUTION=0,   // resolution of the active pixel
+    parameter FRONT_PORCH=0,  // number of front porch pixel
+    parameter SYNC_PULSE=0,   // number of sync pulse pixel
+    parameter BACK_PORCH=0,   // number of back porch pixel
+    parameter TOTAL=0,        // everything summed up
+    parameter POLARITY=0
 )(
     input  logic clk,       // clock
     input  logic enable,    // enable counting
