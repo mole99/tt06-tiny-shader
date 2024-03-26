@@ -5,11 +5,11 @@
 `default_nettype none
 
 module spi_receiver #(
-    parameter COLOR1_DEFAULT,   // color1 default value
-    parameter COLOR2_DEFAULT,   // color2 default value
-    parameter COLOR3_DEFAULT,   // color3 default value
-    parameter COLOR4_DEFAULT,   // color4 default value
-    parameter MISC_DEFAULT      // misc default value
+    parameter COLOR1_DEFAULT=0,   // color1 default value
+    parameter COLOR2_DEFAULT=0,   // color2 default value
+    parameter COLOR3_DEFAULT=0,   // color3 default value
+    parameter COLOR4_DEFAULT=0,   // color4 default value
+    parameter MISC_DEFAULT=0      // misc default value
 )(
     input  logic clk,           // clock
     input  logic reset_n,       // reset active low
