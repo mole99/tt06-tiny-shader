@@ -120,10 +120,6 @@ module spi_receiver #(
                         3'd1: registers[1*8 +: 8] <= {registers[1*8 +: 7], spi_mosi_sync};
                         3'd2: registers[2*8 +: 8] <= {registers[2*8 +: 7], spi_mosi_sync};
                         3'd3: registers[3*8 +: 8] <= {registers[3*8 +: 7], spi_mosi_sync};
-                        3'd4: registers[4*8 +: 8] <= {registers[4*8 +: 7], spi_mosi_sync};
-                        3'd5: registers[5*8 +: 8] <= {registers[5*8 +: 7], spi_mosi_sync};
-                        3'd6: registers[6*8 +: 8] <= {registers[6*8 +: 7], spi_mosi_sync};
-                        3'd7: registers[7*8 +: 8] <= {registers[7*8 +: 7], spi_mosi_sync};
                     endcase
                     
                     spi_cnt <= spi_cnt + 1;
@@ -142,10 +138,6 @@ module spi_receiver #(
                         3'd1: spi_miso_o <= registers[1*8 + 7];
                         3'd2: spi_miso_o <= registers[2*8 + 7];
                         3'd3: spi_miso_o <= registers[3*8 + 7];
-                        3'd4: spi_miso_o <= registers[4*8 + 7];
-                        3'd5: spi_miso_o <= registers[5*8 + 7];
-                        3'd6: spi_miso_o <= registers[6*8 + 7];
-                        3'd7: spi_miso_o <= registers[7*8 + 7];
                     endcase
                 end
             end
