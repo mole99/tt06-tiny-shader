@@ -49,4 +49,4 @@ jobs:
           path: |
             test/tb.fst
             test/results.xml
-            test/frame.png
+            test/default.png

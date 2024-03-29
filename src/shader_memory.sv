@@ -9,17 +9,19 @@ module shader_memory #(
     input  logic        clk_i,
     input  logic        rst_ni,
     input  logic        shift_i,
+    input  logic        load_i,
+    input  logic [7:0]  instr_i,
     output logic [7:0]  instr_o
 );
     logic [7:0] memory [NUM_INSTR];
     int i;
 
-    // Initialize the memory and shift the memory
-    // by a whole word if shift_i is high
+    // Initialize the memory on reset 
+    // Shift the memory by a whole word if shift_i is high
     always_ff @(posedge clk_i, negedge rst_ni) begin
         if (!rst_ni) begin
             `ifdef COCOTB_SIM
-            $readmemb("../sw/binary/test2.bit", memory);
+            $readmemb("../sw/binary/test4.bit", memory);
             `else
             // Load the default program
             memory[0] <= 8'b00_0100_00; // GETX R0
@@ -37,7 +39,13 @@ module shader_memory #(
                     if (i < NUM_INSTR-1) begin
                         memory[i] <= memory[i+1];
                     end else begin
-                        memory[i] <= memory[0];
+                        // Load a new word from externally
+                        if (load_i) begin
+                            memory[i] <= instr_i;
+                        // Else just shift circularily
+                        end else begin
+                            memory[i] <= memory[0];
+                        end
                     end
                 end
             end

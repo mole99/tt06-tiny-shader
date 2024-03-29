@@ -4,45 +4,44 @@
 `default_nettype none
 
 module spi_receiver #(
-    parameter COLOR1_DEFAULT=0,   // color1 default value
-    parameter COLOR2_DEFAULT=0,   // color2 default value
-    parameter COLOR3_DEFAULT=0,   // color3 default value
-    parameter COLOR4_DEFAULT=0,   // color4 default value
-    parameter MISC_DEFAULT=0      // misc default value
+    parameter NUM_REGS = 4,
+    parameter REG_SIZE = 8,
+    parameter [NUM_REGS*REG_SIZE-1:0] REG_DEFAULTS = '0
 )(
-    input  logic clk,           // clock
-    input  logic reset_n,       // reset active low
+    input  logic clk_i,    // clock
+    input  logic rst_ni,   // reset active low
     
     // SPI signals
-    input  logic spi_sclk,
-    input  logic spi_mosi,
-    output logic spi_miso,
-    input  logic spi_cs,
+    input  logic spi_sclk_i,
+    input  logic spi_mosi_i,
+    output logic spi_miso_o,
+    input  logic spi_cs_i,
     
-    input  logic sprite_data,       // current sprite data
-    output logic spi_sprite_shift,  // shift pulse
-    output logic spi_sprite_mode,   // shift new data into sprite
-    output logic spi_mosi_sync,     // spi input data
+    // Mode signal
+    // '0' = command mode
+    // '1' = data mode
+    input  logic       mode_i,
     
-    output logic shift_x,           // shift new x position
-    output logic shift_y,           // shift new y position
+    input  logic [7:0] memory_instr_i,  // current sprite data
+    output logic [7:0] memory_instr_o,  // current sprite data
+    output logic       memory_shift_o,  // shift pulse
+    output logic       memory_load_o,   // shift new data into sprite
     
-    // Output register
-    output logic [5:0] color1,      // color1 register
-    output logic [5:0] color2,      // color2 register
-    output logic [5:0] color3,      // color3 register
-    output logic [5:0] color4,      // color4 register
-    output logic [4:0] misc         // miscellaneous register
+    // Output registers
+    output logic [NUM_REGS*REG_SIZE-1:0] registers_o
 );
+    
+    logic [NUM_REGS*REG_SIZE-1:0] registers;
     
     // Synchronizer to prevent metastability
 
+    logic spi_mosi_sync;
     synchronizer  #(
         .FF_COUNT(2)
     ) synchronizer_spi_mosi (
-        .clk        (clk),
-        .reset_n    (reset_n),
-        .in         (spi_mosi),
+        .clk        (clk_i),
+        .reset_n    (rst_ni),
+        .in         (spi_mosi_i),
         .out        (spi_mosi_sync)
     );
 
@@ -50,9 +49,9 @@ module spi_receiver #(
     synchronizer  #(
         .FF_COUNT(2)
     ) synchronizer_spi_cs (
-        .clk        (clk),
-        .reset_n    (reset_n),
-        .in         (spi_cs),
+        .clk        (clk_i),
+        .reset_n    (rst_ni),
+        .in         (spi_cs_i),
         .out        (spi_cs_sync)
     );
 
@@ -60,17 +59,16 @@ module spi_receiver #(
     synchronizer  #(
         .FF_COUNT(2)
     ) synchronizer_spi_sclk (
-        .clk        (clk),
-        .reset_n    (reset_n),
-        .in         (spi_sclk),
+        .clk        (clk_i),
+        .reset_n    (rst_ni),
+        .in         (spi_sclk_i),
         .out        (spi_sclk_sync)
     );
 
-    
     // Detect spi_clk edge
     
     logic spi_sclk_delayed;
-    always_ff @(posedge clk) begin
+    always_ff @(posedge clk_i) begin
         spi_sclk_delayed <= spi_sclk_sync;
     end
     
@@ -80,79 +78,57 @@ module spi_receiver #(
     
     // State Machine
 
-    logic [2:0] spi_cmd;
+    logic [7:0] spi_cmd;
     logic [2:0] spi_cnt;
     logic spi_mode;
     
-    typedef enum bit [2:0] {
-        CMD_SPRITE_DATA = 3'd0,
-        CMD_COLOR1      = 3'd1,
-        CMD_COLOR2      = 3'd2,
-        CMD_COLOR3      = 3'd3,
-        CMD_COLOR4      = 3'd4,
-        CMD_SPRITE_X    = 3'd5,
-        CMD_SPRITE_Y    = 3'd6,
-        CMD_MISC        = 3'd7
-    } spi_cmds_t;
-    
-    logic spi_cmd_sprite_data;
-    logic spi_cmd_color1;
-    logic spi_cmd_color2;
-    logic spi_cmd_color3;
-    logic spi_cmd_color4;
-    logic spi_cmd_sprite_x;
-    logic spi_cmd_sprite_y;
-    logic spi_cmd_misc;
-    
-    assign spi_cmd_sprite_data  = spi_cmd == CMD_SPRITE_DATA;
-    assign spi_cmd_color1       = spi_cmd == CMD_COLOR1;
-    assign spi_cmd_color2       = spi_cmd == CMD_COLOR2;
-    assign spi_cmd_color3       = spi_cmd == CMD_COLOR3;
-    assign spi_cmd_color4       = spi_cmd == CMD_COLOR4;
-    assign spi_cmd_sprite_x     = spi_cmd == CMD_SPRITE_X;
-    assign spi_cmd_sprite_y     = spi_cmd == CMD_SPRITE_Y;
-    assign spi_cmd_misc         = spi_cmd == CMD_MISC;
-    
-    logic first_data_sprite;
-    
-    always_ff @(posedge clk, negedge reset_n) begin
-        if (!reset_n) begin
+    always_ff @(posedge clk_i, negedge rst_ni) begin
+        if (!rst_ni) begin
             spi_mode <= 1'b0;
-            spi_cnt  <= '0;
-            spi_miso <= 1'b0;
-            
-            color1 <= COLOR1_DEFAULT;
-            color2 <= COLOR2_DEFAULT;
-            color3 <= COLOR3_DEFAULT;
-            color4 <= COLOR4_DEFAULT;
-            
-            misc   <= MISC_DEFAULT;
+            spi_cnt  <= 3'd0;
+            spi_cmd  <= 8'b0;
 
-            first_data_sprite <= 1'b0;
+            registers <= REG_DEFAULTS;
+            
+            spi_miso_o <= 1'b0;
+            
+            memory_shift_o <= 1'b0;
+            memory_load_o  <= 1'b0;
         end else begin
+            memory_shift_o <= 1'b0;
+            memory_load_o  <= 1'b0;
+        
             if (!spi_cs_sync && spi_sclk_falling) begin
                 // Read the command
                 if (spi_mode == 1'b0) begin
-                    spi_cmd <= {spi_cmd[1:0], spi_mosi_sync};
+                    spi_cmd <= {spi_cmd[6:0], spi_mosi_sync};
                     spi_cnt <= spi_cnt + 1;
                     
                     if (spi_cnt == 7) begin
-                        spi_mode <= 1'b1;
+                        if (mode_i == 0) begin
+                            // Read the command
+                            spi_mode <= 1'b1;
+                        end else begin
+                            memory_shift_o <= 1'b1;
+                            memory_load_o  <= 1'b1;
+                        end
                     end
                 // Write the data depending on the command
                 end else begin
-                    case (1'b1)
-                        spi_cmd_color1: color1 <= {color1[4:0], spi_mosi_sync};
-                        spi_cmd_color2: color2 <= {color2[4:0], spi_mosi_sync};
-                        spi_cmd_color3: color3 <= {color3[4:0], spi_mosi_sync};
-                        spi_cmd_color4: color4 <= {color4[4:0], spi_mosi_sync};
-                        spi_cmd_sprite_data: first_data_sprite <= 1'b1;
-                        spi_cmd_misc: misc <= {misc[3:0], spi_mosi_sync};
+                    case (spi_cmd)
+                        3'd0: registers[0*8 +: 8] <= {registers[0*8 +: 7], spi_mosi_sync};
+                        3'd1: registers[1*8 +: 8] <= {registers[1*8 +: 7], spi_mosi_sync};
+                        3'd2: registers[2*8 +: 8] <= {registers[2*8 +: 7], spi_mosi_sync};
+                        3'd3: registers[3*8 +: 8] <= {registers[3*8 +: 7], spi_mosi_sync};
+                        3'd4: registers[4*8 +: 8] <= {registers[4*8 +: 7], spi_mosi_sync};
+                        3'd5: registers[5*8 +: 8] <= {registers[5*8 +: 7], spi_mosi_sync};
+                        3'd6: registers[6*8 +: 8] <= {registers[6*8 +: 7], spi_mosi_sync};
+                        3'd7: registers[7*8 +: 8] <= {registers[7*8 +: 7], spi_mosi_sync};
                     endcase
                     
                     spi_cnt <= spi_cnt + 1;
 
-                    if (spi_cnt == 7 && !spi_sprite_mode) begin
+                    if (spi_cnt == 7) begin
                         spi_mode <= 1'b0;
                     end
                 end
@@ -161,33 +137,23 @@ module spi_receiver #(
             // Echo back the previous values
             if (!spi_cs_sync && spi_sclk_rising) begin
                 if (spi_mode == 1'b1) begin
-                    case (1'b1)
-                        spi_cmd_color1: spi_miso <= color1[5];
-                        spi_cmd_color2: spi_miso <= color2[5];
-                        spi_cmd_color3: spi_miso <= color3[5];
-                        spi_cmd_color4: spi_miso <= color4[5];
-                        spi_cmd_sprite_data: spi_miso <= sprite_data;
-                        spi_cmd_misc: spi_miso <= misc[4];
+                    case (spi_cmd)
+                        3'd0: spi_miso_o <= registers[0*8 + 7];
+                        3'd1: spi_miso_o <= registers[1*8 + 7];
+                        3'd2: spi_miso_o <= registers[2*8 + 7];
+                        3'd3: spi_miso_o <= registers[3*8 + 7];
+                        3'd4: spi_miso_o <= registers[4*8 + 7];
+                        3'd5: spi_miso_o <= registers[5*8 + 7];
+                        3'd6: spi_miso_o <= registers[6*8 + 7];
+                        3'd7: spi_miso_o <= registers[7*8 + 7];
                     endcase
                 end
             end
-            
-            // Loading sprite data can be interrupted by rising cs
-            // after one bit was shifted into the sprite.
-            // This means it is possible to e.g. shift 100 bits and not only 8 at once
-            if (first_data_sprite && spi_sprite_mode && spi_cs_sync) begin
-                spi_mode <= 1'b0;
-                first_data_sprite <= 1'b0;
-            end
         end
     end
-    
-    // Enable sprite data shifting
-    assign spi_sprite_mode = spi_mode && spi_cmd_sprite_data;
-    assign spi_sprite_shift = spi_sprite_mode && spi_sclk_falling;
-    
-    // Indicate we want to shift a new position
-    assign shift_x = spi_mode && spi_cmd_sprite_x && spi_sclk_falling;
-    assign shift_y = spi_mode && spi_cmd_sprite_y && spi_sclk_falling;
-    
+
+    assign registers_o = registers;
+
+    assign memory_instr_o = spi_cmd;
+
 endmodule

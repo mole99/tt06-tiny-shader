@@ -3,6 +3,7 @@
 .vscode
 *.vcd
 *.fst
+*.fst.hier
 runs
 tt_submission
 src/user_config.tcl
@@ -10,3 +11,4 @@ test/sim_build
 test/__pycache__/
 test/results.xml
 test/gate_level_netlist.v
+frame.png

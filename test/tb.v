@@ -11,10 +11,20 @@ module tb ();
     $dumpfile("tb.fst");
     $dumpvars(0, tb);
     `ifndef GL_TEST
+    // Dump execute regs
     $dumpvars(0, tb.tt_um_tiny_shader_mole99_inst.tiny_shader_top_inst.shader_execute_inst.regs[0]);
     $dumpvars(0, tb.tt_um_tiny_shader_mole99_inst.tiny_shader_top_inst.shader_execute_inst.regs[1]);
     $dumpvars(0, tb.tt_um_tiny_shader_mole99_inst.tiny_shader_top_inst.shader_execute_inst.regs[2]);
     $dumpvars(0, tb.tt_um_tiny_shader_mole99_inst.tiny_shader_top_inst.shader_execute_inst.regs[3]);
+    // Dump shader memory
+    $dumpvars(0, tb.tt_um_tiny_shader_mole99_inst.tiny_shader_top_inst.shader_memory_inst.memory[0]);
+    $dumpvars(0, tb.tt_um_tiny_shader_mole99_inst.tiny_shader_top_inst.shader_memory_inst.memory[1]);
+    $dumpvars(0, tb.tt_um_tiny_shader_mole99_inst.tiny_shader_top_inst.shader_memory_inst.memory[2]);
+    $dumpvars(0, tb.tt_um_tiny_shader_mole99_inst.tiny_shader_top_inst.shader_memory_inst.memory[3]);
+    $dumpvars(0, tb.tt_um_tiny_shader_mole99_inst.tiny_shader_top_inst.shader_memory_inst.memory[4]);
+    $dumpvars(0, tb.tt_um_tiny_shader_mole99_inst.tiny_shader_top_inst.shader_memory_inst.memory[5]);
+    $dumpvars(0, tb.tt_um_tiny_shader_mole99_inst.tiny_shader_top_inst.shader_memory_inst.memory[6]);
+    $dumpvars(0, tb.tt_um_tiny_shader_mole99_inst.tiny_shader_top_inst.shader_memory_inst.memory[7]);
     `endif
     #1;
     end
@@ -34,6 +44,13 @@ module tb ();
     wire [5:0] rrggbb;
     wire hsync;
     wire vsync;
+    
+    wire spi_sclk;
+    wire spi_mosi;
+    wire spi_miso;
+    wire spi_cs;
+    
+    wire mode;
 
     // Output PMOD - Tiny VGA
 
@@ -43,7 +60,18 @@ module tb ();
     
     assign vsync = uo_out[3];
     assign hsync = uo_out[7];
+    
+    // Bidir PMOD - SPI and additional signals
+    
+    // Top row - SPI
+    assign uio_in[0] = spi_cs;
+    assign uio_in[1] = spi_mosi;
+    assign spi_miso = uio_out[2];
+    assign uio_in[3] = spi_sclk;
 
+    // Input PMOD - mode
+    
+    assign ui_in[0] = mode;
 
     // Replace tt_um_example with your module name:
     tt_um_tiny_shader_mole99 tt_um_tiny_shader_mole99_inst (

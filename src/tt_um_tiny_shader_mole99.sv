@@ -26,6 +26,13 @@ module tt_um_tiny_shader_mole99 (
     logic next_vertical;
     logic next_frame;
     
+    logic spi_sclk;
+    logic spi_mosi;
+    logic spi_miso;
+    logic spi_cs;
+    
+    logic mode;
+    
     tiny_shader_top #(
     
     ) tiny_shader_top_inst (
@@ -33,7 +40,13 @@ module tt_um_tiny_shader_mole99 (
         .rst_ni     (rst_n_sync),
 
         // SPI signals
-        // TODO
+        .spi_sclk_i     (spi_sclk),
+        .spi_mosi_i     (spi_mosi),
+        .spi_miso_o     (spi_miso),
+        .spi_cs_i       (spi_cs),
+        
+        // Mode signal
+        .mode_i         (mode),
 
         // SVGA signals
         .rrggbb_o         (rrggbb),
@@ -64,11 +77,11 @@ module tt_um_tiny_shader_mole99 (
     
     // Bidir PMOD - SPI and additional signals
     
-    // Top row
-    assign uio_out[0] = 1'b0; assign uio_oe[0] = 1'b0;
-    assign uio_out[1] = 1'b0; assign uio_oe[1] = 1'b0;
-    assign uio_out[2] = 1'b0; assign uio_oe[2] = 1'b0;
-    assign uio_out[3] = 1'b0; assign uio_oe[3] = 1'b0;
+    // Top row - SPI
+    assign spi_cs     = uio_in[0];  assign uio_oe[0] = 1'b0; assign uio_out[0] = 1'b0;
+    assign spi_mosi   = uio_in[1];  assign uio_oe[1] = 1'b0; assign uio_out[1] = 1'b0;
+    assign uio_out[2] = spi_miso;   assign uio_oe[2] = 1'b1;
+    assign spi_sclk   = uio_in[3];  assign uio_oe[3] = 1'b0; assign uio_out[3] = 1'b0;
 
     // Bottom row
     assign uio_out[4] = 1'b0; assign uio_oe[4] = 1'b0;
@@ -76,11 +89,10 @@ module tt_um_tiny_shader_mole99 (
     assign uio_out[6] = 1'b0; assign uio_oe[6] = 1'b0;
     assign uio_out[7] = 1'b0; assign uio_oe[7] = 1'b0;
 
-    // Input PMOD - not used
-
-    /*
-    ui_in[0]
-    ui_in[1]
+    // Input PMOD - mode
+    
+    assign mode = ui_in[0];
+    /*ui_in[1]
     ui_in[2]
     ui_in[3]
     ui_in[4]

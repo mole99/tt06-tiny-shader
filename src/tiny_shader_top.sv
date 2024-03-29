@@ -8,14 +8,22 @@ module tiny_shader_top (
     input  logic        rst_ni,
     
     // SPI signals
-    // TODO
+    input  logic spi_sclk_i,
+    input  logic spi_mosi_i,
+    output logic spi_miso_o,
+    input  logic spi_cs_i,
+    
+    // Mode signal
+    // '0' = command mode
+    // '1' = data mode
+    input  logic mode_i,
     
     // SVGA signals
-    output logic [5:0] rrggbb_o,
-    output logic hsync_o,
-    output logic vsync_o,
-    output logic next_vertical_o,
-    output logic next_frame_o
+    output logic [5:0]  rrggbb_o,
+    output logic        hsync_o,
+    output logic        vsync_o,
+    output logic        next_vertical_o,
+    output logic        next_frame_o
 );
 
     /*
@@ -144,7 +152,50 @@ module tiny_shader_top (
         cs_active_low = True
     */
     
+    logic [7:0] memory_instr;
+    logic memory_shift;
+    logic memory_load;
+    
+    localparam NUM_REGS = 4;
+    localparam REG_SIZE = 8;
+    
     // TODO
+    logic [NUM_REGS*REG_SIZE-1:0] registers;
+    
+    logic [7:0] reg0, reg1, reg2, reg3;
+    
+    assign reg0 = registers[0*8 +: 8];
+    assign reg1 = registers[1*8 +: 8];
+    assign reg2 = registers[2*8 +: 8];
+    assign reg3 = registers[3*8 +: 8];
+    
+    spi_receiver #(
+        .NUM_REGS       (NUM_REGS),
+        .REG_SIZE       (REG_SIZE),
+        .REG_DEFAULTS   ({NUM_REGS{8'b0}})
+    ) spi_receiver_inst (
+        .clk_i          (clk_i),
+        .rst_ni         (rst_ni),
+        
+        // SPI signals
+        .spi_sclk_i     (spi_sclk_i),
+        .spi_mosi_i     (spi_mosi_i),
+        .spi_miso_o     (spi_miso_o),
+        .spi_cs_i       (spi_cs_i),
+        
+        // Mode signal
+        .mode_i         (mode_i),
+        
+        .memory_instr_i (instr),
+        .memory_instr_o (memory_instr),
+        .memory_shift_o (memory_shift),
+        .memory_load_o  (memory_load),
+        
+        // Output registers
+        .registers_o (registers)
+    );
+
+    // Graphics
 
     logic [5:0] counter_h_small;
     logic [5:0] counter_v_small;
@@ -161,7 +212,9 @@ module tiny_shader_top (
     shader_memory shader_memory_inst (
         .clk_i      (clk_i),
         .rst_ni     (rst_ni),
-        .shift_i    (execute_shader),
+        .shift_i    (execute_shader || memory_shift),
+        .load_i     (memory_load),
+        .instr_i    (memory_instr),
         .instr_o    (instr)
     );
 
