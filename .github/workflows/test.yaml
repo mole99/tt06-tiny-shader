@@ -24,6 +24,9 @@ jobs:
           cocotb-config --libpython
           cocotb-config --python-bin
 
+      - name: Install cocotbext-spi
+        run: pip install cocotbext-spi
+
       - name: Install pillow
         run: pip install pillow
 
