@@ -18,17 +18,17 @@ jobs:
           python-version: '3.11'
 
       - name: Install cocotb 1.8.x
+        if: ${{ hashFiles('test/requirements.txt') == '' }}
         shell: bash
         run: |
           pip install cocotb~=1.8.0
           cocotb-config --libpython
           cocotb-config --python-bin
 
-      - name: Install cocotbext-spi
-        run: pip install cocotbext-spi
-
-      - name: Install pillow
-        run: pip install pillow
+      - name: Install Python packages
+        if: ${{ hashFiles('test/requirements.txt') != '' }}
+        shell: bash
+        run: pip install -r test/requirements.txt
 
       - name: Run tests
         run: |
