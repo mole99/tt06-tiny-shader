@@ -33,7 +33,7 @@ jobs:
           submodules: recursive
 
       - name: GL test
-        uses: mole99/tt-gds-action/gl_test@main
+        uses: mole99/tt-gds-action/gl_test@requirements
 
   viewer:
     needs: gds
