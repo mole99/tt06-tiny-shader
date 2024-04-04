@@ -1,9 +1,9 @@
 # SPDX-FileCopyrightText: © 2024 Leo Moser <leomoser99@gmail.com>
 # SPDX-License-Identifier: Apache-2.0
 
-from PIL import Image, ImageChops
+import os
 import random
-
+from PIL import Image, ImageChops
 import cocotb
 from cocotb.clock import Clock
 from cocotb.triggers import ClockCycles
@@ -115,7 +115,7 @@ async def test_vga_default(dut):
 
     await ClockCycles(dut.clk, 10)
 
-@cocotb.test()
+@cocotb.test(skip=os.environ.get('GL_TEST', None) != None)
 async def test_spi_regs(dut):
 
     # Start the clock
@@ -170,7 +170,7 @@ async def test_spi_regs(dut):
 
     await ClockCycles(dut.clk, 10)
 
-@cocotb.test()
+@cocotb.test(skip=os.environ.get('GL_TEST', None) != None)
 async def test_spi_shader(dut):
 
     # Start the clock
@@ -208,7 +208,7 @@ async def test_spi_shader(dut):
 
     await ClockCycles(dut.clk, 10)
     
-@cocotb.test()
+@cocotb.test(skip=os.environ.get('GL_TEST', None) != None)
 async def test_spi_regs_shader_regs_random(dut):
 
     # Start the clock
