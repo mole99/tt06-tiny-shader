@@ -33,7 +33,17 @@ jobs:
           submodules: recursive
 
       - name: GL test
-        uses: mole99/tt-gds-action/gl_test@requirements
+        uses: TinyTapeout/tt-gds-action/gl_test@tt06
+
+      - name: Upload FST and image
+        if: success() || failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-fst
+          path: |
+            test/tb.fst
+            test/results.xml
+            test/default.png
 
   viewer:
     needs: gds
