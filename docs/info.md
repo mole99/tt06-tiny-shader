@@ -19,7 +19,7 @@ These images and many more can be generated with Tiny Shader. Note, that shaders
 
 |||||
 |-|-|-|-|
-|![test2.png](../images/test2.png)|![test4.png](../images/test4.png)|![test5.png](../images/test5.png)|![test7.png](../images/test7.png)|
+|![test2.png](images/test2.png)|![test4.png](images/test4.png)|![test5.png](images/test5.png)|![test7.png](images/test7.png)|
 
 The shader for the last image is shown here:
 
