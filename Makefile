@@ -60,7 +60,6 @@ icebreaker.bit: icebreaker.asc
 	icepack $< $@
 
 # --- ULX3S ---
-# TODO not tested!
 
 synth-ulx3s: ulx3s.json
 
