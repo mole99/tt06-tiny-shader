@@ -284,11 +284,11 @@ module tiny_shader_top (
 
             if (capture) begin
                 rgb_d <= rgb_o;
-                
-                // Blanking intervall
-                if (hblank || vblank) begin
-                    rgb_d <= '0;
-                end
+            end
+            
+            // Blanking intervall
+            if (hblank || vblank) begin
+                rgb_d <= '0;
             end
         end
     end
