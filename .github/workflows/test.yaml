@@ -52,4 +52,4 @@ jobs:
           path: |
             test/tb.fst
             test/results.xml
-            test/default.png
+            test/*.png
