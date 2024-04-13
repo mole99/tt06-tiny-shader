@@ -8,11 +8,12 @@ import cocotb
 from cocotb.clock import Clock
 from cocotb.triggers import ClockCycles
 from cocotb.triggers import Timer, RisingEdge, FallingEdge
+from cocotb.regression import TestFactory
 
 from cocotbext.spi import SpiBus, SpiConfig, SpiMaster
 
 # Tiny Shader Settings
-NUM_INSTR = 12
+NUM_INSTR = 10
 
 # VGA Parameters
 WIDTH    = 640
@@ -82,15 +83,9 @@ async def draw_frame(dut):
         else:
             screen_x += 1
 
-# Send cmd and payload over SPI
-async def spi_send_cmd(dut, spi_master, cmd, data, burst=False):
-    print(f'CMD: {cmd} DATA: {data}')
-    await spi_master.write(cmd)
-    await spi_master.write(data, burst=burst)
-
-@cocotb.test()
+#@cocotb.test()
 async def test_vga_default(dut):
-    dut._log.info("Starting test_vga")
+    """Draw one frame with the default shader"""
 
     # Start the clock
     c = Clock(dut.clk, 10, 'ns')
@@ -110,16 +105,83 @@ async def test_vga_default(dut):
     # Start thread to draw frame
     taks_draw_frame = await cocotb.start(draw_frame(dut))
 
-    # Set the input values, wait one clock cycle, and check the output
-    dut._log.info("Test")
-
     image = await taks_draw_frame.join()
     image.save(f"default.png")
 
     await ClockCycles(dut.clk, 10)
 
+def load_shader(shader_name):
+    """Load a shader from a binary text file"""
+    shader = []
+    
+    with open(f'../sw/binary/{shader_name}.bit') as f:
+        for line in f.readlines():
+            line = line.replace('_', '')
+            if '//' in line:
+                line = line.split('//')[0]
+            if line:
+                shader.append(int(line, 2))
+    
+    return shader
+
+# TestFactory
+async def test_vga_load(dut, shader_name='test7'):
+    """Load a shader and draw one frame"""
+
+    # Start the clock
+    c = Clock(dut.clk, 10, 'ns')
+    await cocotb.start(c.start())
+    
+    # SPI
+    spi_bus = SpiBus.from_prefix(dut, "spi")
+
+    spi_config = SpiConfig(
+        word_width = 8,
+        sclk_freq  = 2e6,
+        cpol       = False,
+        cpha       = True,
+        msb_first  = True,
+        frame_spacing_ns = 500
+    )
+
+    spi_master = SpiMaster(spi_bus, spi_config)
+
+    # Assign default values
+    dut.ena.value = 1
+    dut.mode.value = 0 # cmd mode
+
+    # Reset
+    await reset_dut(dut.rst_n, 50)
+    dut._log.info("Reset done")
+    
+    # Set to data mode
+    dut.mode.value = 1 # data mode
+    
+    # Get shader
+    shader = load_shader(shader_name)
+    assert(len(shader) == NUM_INSTR)
+
+    # Send new shader instructions
+    await spi_master.write(shader, burst=True)
+    
+    await FallingEdge(dut.vsync)
+    await FallingEdge(dut.hsync)
+    
+    # Start thread to draw frame
+    taks_draw_frame = await cocotb.start(draw_frame(dut))
+
+    image = await taks_draw_frame.join()
+    image.save(f"{shader_name}.png")
+
+    await ClockCycles(dut.clk, 10)
+
+tf = TestFactory(test_function=test_vga_load)
+tf.add_option(name='shader_name', optionlist=['test1', 'test2', 'test7'])
+tf.generate_tests()
+
 @cocotb.test(skip=os.environ.get('GL_TEST', None) != None)
 async def test_spi_regs(dut):
+    """Access the user register"""
 
     # Start the clock
     c = Clock(dut.clk, 10, 'ns')
@@ -146,35 +208,26 @@ async def test_spi_regs(dut):
     await reset_dut(dut.rst_n, 50)
     dut._log.info("Reset done")
     
-    assert(dut.tt_um_tiny_shader_mole99_inst.tiny_shader_top_inst.reg0.value == 0x00)
-    assert(dut.tt_um_tiny_shader_mole99_inst.tiny_shader_top_inst.reg1.value == 0x00)
-    assert(dut.tt_um_tiny_shader_mole99_inst.tiny_shader_top_inst.reg2.value == 0x00)
-    assert(dut.tt_um_tiny_shader_mole99_inst.tiny_shader_top_inst.reg3.value == 0x00)
+    assert(dut.tt_um_tiny_shader_mole99_inst.tiny_shader_top_inst.user.value == 42)
     
-    # Set reg0
-    await spi_send_cmd(dut, spi_master, [0x0], [0x03])
-    assert(dut.tt_um_tiny_shader_mole99_inst.tiny_shader_top_inst.reg0.value == 0x03)
+    # Set user register
+    await spi_master.write([0x03])
+    assert(dut.tt_um_tiny_shader_mole99_inst.tiny_shader_top_inst.user.value == 0x03)
     
-    # Set reg1
-    await spi_send_cmd(dut, spi_master, [0x1], [0x70])
-    assert(dut.tt_um_tiny_shader_mole99_inst.tiny_shader_top_inst.reg1.value == 0x70)
+    await spi_master.write([0x14])
+    assert(dut.tt_um_tiny_shader_mole99_inst.tiny_shader_top_inst.user.value == 0x14)
     
-    # Set reg2
-    await spi_send_cmd(dut, spi_master, [0x2], [0xEA])
-    assert(dut.tt_um_tiny_shader_mole99_inst.tiny_shader_top_inst.reg2.value == 0xEA)
+    await spi_master.write([0xFF])
+    assert(dut.tt_um_tiny_shader_mole99_inst.tiny_shader_top_inst.user.value == 0x3F)
     
-    # Set reg3
-    await spi_send_cmd(dut, spi_master, [0x3], [0xF3])
-    assert(dut.tt_um_tiny_shader_mole99_inst.tiny_shader_top_inst.reg3.value == 0xF3)
-
-    # Set reg0
-    await spi_send_cmd(dut, spi_master, [0x0], [0x42])
-    assert(dut.tt_um_tiny_shader_mole99_inst.tiny_shader_top_inst.reg0.value == 0x42)
+    await spi_master.write([0x00])
+    assert(dut.tt_um_tiny_shader_mole99_inst.tiny_shader_top_inst.user.value == 0x00)
 
     await ClockCycles(dut.clk, 10)
 
 @cocotb.test(skip=os.environ.get('GL_TEST', None) != None)
 async def test_spi_shader(dut):
+    """Write random data into the shader memory"""
 
     # Start the clock
     c = Clock(dut.clk, 10, 'ns')
@@ -212,7 +265,8 @@ async def test_spi_shader(dut):
     await ClockCycles(dut.clk, 10)
     
 @cocotb.test(skip=os.environ.get('GL_TEST', None) != None)
-async def test_spi_regs_shader_regs_random(dut):
+async def test_spi_random(dut):
+    """Write random data into register and shader and read back"""
 
     # Start the clock
     c = Clock(dut.clk, 10, 'ns')
@@ -239,35 +293,17 @@ async def test_spi_regs_shader_regs_random(dut):
     await reset_dut(dut.rst_n, 50)
     dut._log.info("Reset done")
     
-    assert(dut.tt_um_tiny_shader_mole99_inst.tiny_shader_top_inst.reg0.value == 0x00)
-    assert(dut.tt_um_tiny_shader_mole99_inst.tiny_shader_top_inst.reg1.value == 0x00)
-    assert(dut.tt_um_tiny_shader_mole99_inst.tiny_shader_top_inst.reg2.value == 0x00)
-    assert(dut.tt_um_tiny_shader_mole99_inst.tiny_shader_top_inst.reg3.value == 0x00)
+    assert(dut.tt_um_tiny_shader_mole99_inst.tiny_shader_top_inst.user.value == 42)
     
     # Set reg0
     data = random.randint(0, 255)
-    await spi_send_cmd(dut, spi_master, [0x0], [data])
-    assert(dut.tt_um_tiny_shader_mole99_inst.tiny_shader_top_inst.reg0.value == data)
-    
-    # Set reg1
-    data = random.randint(0, 255)
-    await spi_send_cmd(dut, spi_master, [0x1], [data])
-    assert(dut.tt_um_tiny_shader_mole99_inst.tiny_shader_top_inst.reg1.value == data)
-    
-    # Set reg2
-    data = random.randint(0, 255)
-    await spi_send_cmd(dut, spi_master, [0x2], [data])
-    assert(dut.tt_um_tiny_shader_mole99_inst.tiny_shader_top_inst.reg2.value == data)
-    
-    # Set reg3
-    data = random.randint(0, 255)
-    await spi_send_cmd(dut, spi_master, [0x3], [data])
-    assert(dut.tt_um_tiny_shader_mole99_inst.tiny_shader_top_inst.reg3.value == data)
+    await spi_master.write([data])
+    assert(dut.tt_um_tiny_shader_mole99_inst.tiny_shader_top_inst.user.value == data & 0x3F)
 
     # Set reg0
     data = random.randint(0, 255)
-    await spi_send_cmd(dut, spi_master, [0x0], [data])
-    assert(dut.tt_um_tiny_shader_mole99_inst.tiny_shader_top_inst.reg0.value == data)
+    await spi_master.write([data])
+    assert(dut.tt_um_tiny_shader_mole99_inst.tiny_shader_top_inst.user.value == data & 0x3F)
 
     dut.mode.value = 1 # data mode
     
@@ -285,25 +321,11 @@ async def test_spi_regs_shader_regs_random(dut):
     
     # Set reg0
     data = random.randint(0, 255)
-    await spi_send_cmd(dut, spi_master, [0x0], [data])
-    assert(dut.tt_um_tiny_shader_mole99_inst.tiny_shader_top_inst.reg0.value == data)
-    
-    # Set reg1
-    data = random.randint(0, 255)
-    await spi_send_cmd(dut, spi_master, [0x1], [data])
-    assert(dut.tt_um_tiny_shader_mole99_inst.tiny_shader_top_inst.reg1.value == data)
-    
-    # Set reg2
-    data = random.randint(0, 255)
-    await spi_send_cmd(dut, spi_master, [0x2], [data])
-    assert(dut.tt_um_tiny_shader_mole99_inst.tiny_shader_top_inst.reg2.value == data)
-    
-    # Set reg3
-    data = random.randint(0, 255)
-    await spi_send_cmd(dut, spi_master, [0x3], [data])
-    assert(dut.tt_um_tiny_shader_mole99_inst.tiny_shader_top_inst.reg3.value == data)
+    await spi_master.write([data])
+    assert(dut.tt_um_tiny_shader_mole99_inst.tiny_shader_top_inst.user.value == data & 0x3F)
 
     # Set reg0
     data = random.randint(0, 255)
-    await spi_send_cmd(dut, spi_master, [0x0], [data])
-    assert(dut.tt_um_tiny_shader_mole99_inst.tiny_shader_top_inst.reg0.value == data)
+    await spi_master.write([data])
+    assert(dut.tt_um_tiny_shader_mole99_inst.tiny_shader_top_inst.user.value == data & 0x3F)
+

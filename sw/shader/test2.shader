@@ -8,3 +8,6 @@ SETG R1
 
 XOR R0 R0
 XOR R0 R0
+
+NOP
+NOP

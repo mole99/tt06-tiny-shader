@@ -5,41 +5,75 @@ import argparse
 
 instructions = {
 
-    'SETRGB' : {'format': 'single_operand', 'opcode': '00_0000'},
-    'SETR' : {'format': 'single_operand', 'opcode': '00_0001'},
-    'SETG' : {'format': 'single_operand', 'opcode': '00_0010'},
-    'SETB' : {'format': 'single_operand', 'opcode': '00_0011'},
+    'SETRGB' : {'format': 'single_operand', 'opcode': '00_0000', 'short': 'RGB <= RA', 'description': 'Set the output color to the value of the specified register.', 'category': 'Output'},
+    'SETR' : {'format': 'single_operand', 'opcode': '00_0001', 'short': 'R <= RA[1:0]', 'description': 'Set the red channel of the output color to the lower two bits of the specified register.', 'category': 'Output'},
+    'SETG' : {'format': 'single_operand', 'opcode': '00_0010', 'short': 'G <= RA[1:0]', 'description': 'Set the green channel of the output color to the lower two bits of the specified register.', 'category': 'Output'},
+    'SETB' : {'format': 'single_operand', 'opcode': '00_0011', 'short': 'B <= RA[1:0]', 'description': 'Set the blue channel of the output color to the lower two bits of the specified register.', 'category': 'Output'},
     
-    'GETX' : {'format': 'single_operand', 'opcode': '00_0100'},
-    'GETY' : {'format': 'single_operand', 'opcode': '00_0101'},
-    'GETTIME' : {'format': 'single_operand', 'opcode': '00_0110'},
-    'GETUSER' : {'format': 'single_operand', 'opcode': '00_0111'},
+    'GETX' : {'format': 'single_operand', 'opcode': '00_0100', 'short': 'RA <= X', 'description': 'Set the specified register to the x position of the current pixel.', 'category': 'Input'},
+    'GETY' : {'format': 'single_operand', 'opcode': '00_0101', 'short': 'RA <= Y', 'description': 'Set the specified register to the y position of the current pixel.', 'category': 'Input'},
+    'GETTIME' : {'format': 'single_operand', 'opcode': '00_0110', 'short': 'RA <= TIME', 'description': 'Set the specified register to the current time value, increases with each frame.', 'category': 'Input'},
+    'GETUSER' : {'format': 'single_operand', 'opcode': '00_0111', 'short': 'RA <= USER', 'description': 'Set the specified register to the user value, can be set via the SPI interface.', 'category': 'Input'},
     
-    'IFEQ' : {'format': 'single_operand', 'opcode': '00_1000'},
-    'IFNE' : {'format': 'single_operand', 'opcode': '00_1001'},
-    'IFGE' : {'format': 'single_operand', 'opcode': '00_1010'},
-    'IFLT' : {'format': 'single_operand', 'opcode': '00_1011'},
+    'IFEQ' : {'format': 'single_operand', 'opcode': '00_1000', 'short': 'TAKE <= RA == REG0', 'description': 'Execute the next instruction if RA equals REG0.', 'category': 'Branches'},
+    'IFNE' : {'format': 'single_operand', 'opcode': '00_1001', 'short': 'TAKE <= RA != REG0', 'description': 'Execute the next instruction if RA does not equal REG0.', 'category': 'Branches'},
+    'IFGE' : {'format': 'single_operand', 'opcode': '00_1010', 'short': 'TAKE <= RA >= REG0', 'description': 'Execute the next instruction if RA is greater then or equal REG0.', 'category': 'Branches'},
+    'IFLT' : {'format': 'single_operand', 'opcode': '00_1011', 'short': 'TAKE <= RA < REG0', 'description': 'Execute the next instruction if RA is less than REG0.', 'category': 'Branches'},
     
-    'TODO0' : {'format': 'single_operand', 'opcode': '00_1100'},
-    'TODO1' : {'format': 'single_operand', 'opcode': '00_1101'},
-    'TODO2' : {'format': 'single_operand', 'opcode': '00_1110'},
-    'SINE' : {'format': 'single_operand', 'opcode': '00_1111'},
+    'DOUBLE' : {'format': 'single_operand', 'opcode': '00_1100', 'short': 'RA <= RA * 2', 'description': 'Double the value of RA.', 'category': 'Arithmetic'},
+    'HALF' : {'format': 'single_operand', 'opcode': '00_1101', 'short': 'RA <= RA / 2', 'description': 'Half the value of RA.', 'category': 'Arithmetic'},
+    'CLEAR' : {'format': 'single_operand', 'opcode': '00_1110', 'short': 'RA <= 0', 'description': 'Clear RA by writing 0.', 'category': 'Load'},
+    'SINE' : {'format': 'single_operand', 'opcode': '00_1111', 'short': 'RA <= SINE[REG0[5:2]] TODO', 'description': 'Get the sine value for REG0 and write into RA.', 'category': 'Special'},
     
-    # Logical operations
-    'AND' : {'format': 'dual_operand', 'opcode': '01_00'},
-    'OR'  : {'format': 'dual_operand', 'opcode': '01_01'},
-    'NOT' : {'format': 'dual_operand', 'opcode': '01_10'},
-    'XOR' : {'format': 'dual_operand', 'opcode': '01_11'},
+    # Boolean operations
+    'AND' : {'format': 'dual_operand', 'opcode': '01_00', 'short': 'RA <= RA & RB', 'description': 'Boolean AND of RA and RB, result written into RA.', 'category': 'Boolean'},
+    'OR'  : {'format': 'dual_operand', 'opcode': '01_01', 'short': 'RA <= RA | RB', 'description': 'Boolean OR of RA and RB, result written into RA.', 'category': 'Boolean'},
+    'NOT' : {'format': 'dual_operand', 'opcode': '01_10', 'short': 'RA <= ~RB', 'description': 'Boolean NOT of RB, result written into RA.', 'category': 'Boolean'},
+    'XOR' : {'format': 'dual_operand', 'opcode': '01_11', 'short': 'RA <= RA ^ RB', 'description': 'Boolean XOR of RA and RB, result written into RA.', 'category': 'Boolean'},
     
     # Various
-    'MOV' : {'format': 'dual_operand', 'opcode': '10_00'},
-    'ADD' : {'format': 'dual_operand', 'opcode': '10_01'},
-    'SHIFTL' : {'format': 'dual_operand', 'opcode': '10_10'},
-    'SHIFTR' : {'format': 'dual_operand', 'opcode': '10_11'},
-    
+    'MOV' : {'format': 'dual_operand', 'opcode': '10_00', 'short': 'RA <= RB', 'description': 'Move value of RB into RA.', 'category': 'Move'},
+    'ADD' : {'format': 'dual_operand', 'opcode': '10_01', 'short': 'RA <= RA + RB', 'description': 'Add RA and RB, result written into RA.', 'category': 'Arithmetic'},
+    'SHIFTL' : {'format': 'dual_operand', 'opcode': '10_10', 'short': 'RA <= RA << RB', 'description': 'Shift RA with RB to the left, result written into RA.', 'category': 'Shift'},
+    'SHIFTR' : {'format': 'dual_operand', 'opcode': '10_11', 'short': 'RA <= RA >> RB', 'description': 'Shift RA with RB to the right, result written into RA.', 'category': 'Shift'},
+
     # Load immediate
-    'LDI' : {'format': 'immediate', 'opcode': '11'}
+    'LDI' : {'format': 'immediate', 'opcode': '11', 'short': 'RA <= IMMEDIATE', 'description': 'Load an immediate value into RA.', 'category': 'Load'},
+    
+    # No operation
+    'NOP' : {'format': 'pseudo', 'opcode': '01_00_00_00', 'short': 'R0 <= R0 & R0', 'description': 'No operation.', 'category': 'Pseudo'}
 }
+
+
+def get_syntax(fmt):
+
+    if fmt == 'immediate':
+        return 'IMMEDIATE'
+    elif fmt == 'single_operand':
+        return 'RA'
+    elif fmt == 'dual_operand':
+        return 'RA RB'
+    else:
+        return 'UNKNOWN'
+
+def summary():
+    categories = {}
+
+    for name, instruction in instructions.items():
+        if not instruction['category'] in categories:
+            categories[instruction['category']] = {}
+        
+        categories[instruction['category']][name] = instruction
+    
+    for name, category in categories.items():
+        print(f'### {name}')
+        
+        print(f'|Instruction|Operation|Description|')
+        print(f'|-----------|---------|-----------|')
+        
+        for name, instruction in category.items():
+        
+            print(f'|{name} {get_syntax(instruction["format"])}|{instruction["short"]}|{instruction["description"]}|')
 
 def get_register(string):
     if string[0] != 'R':
@@ -67,13 +101,16 @@ def assemble(program, verbose=False):
         if token[0] in instructions:
             instr = instructions[token[0]]
             
-            if instr['format'] == 'immediate':
+            if instr['format'] == 'pseudo':
+                assembled += f'{instr["opcode"]} // {line}\n'
+            
+            elif instr['format'] == 'immediate':
                 if (len(token) != 2):
                     print(f'Instruction {token[0]} expects one immediate')
                 imm = int(token[1])
                 assembled += f'{instr["opcode"]}_{imm:06b} // {line}\n'
 
-            if instr['format'] == 'dual_operand':
+            elif instr['format'] == 'dual_operand':
                 if (len(token) != 3):
                     print(f'Instruction {token[0]} expects two operand')
 
@@ -82,13 +119,16 @@ def assemble(program, verbose=False):
 
                 assembled += f'{instr["opcode"]}_{op1:02b}_{op0:02b} // {line}\n'
 
-            if instr['format'] == 'single_operand':
+            elif instr['format'] == 'single_operand':
                 if (len(token) != 2):
                     print(f'Instruction {token[0]} expects one operand')
 
                 op0 = get_register(token[1])
 
                 assembled += f'{instr["opcode"]}_{op0:02b} // {line}\n'
+            
+            else:
+                print(f'Instruction format unknown: {instr["format"]}')
         else:
             print(f'Unknown instruction: {token[0]}')
             sys.exit()
@@ -194,11 +234,21 @@ def simulate(program, x_pos=0, y_pos=0, cur_time=0, user=0, verbose=False):
                 if token[0] == 'IFLT':
                     skip = not (register[op0] < register[0])
 
+                if token[0] == 'DOUBLE':
+                    register[op0] = register[op0] << 1 & 0x3F
+                if token[0] == 'HALF':
+                    register[op0] = register[op0] >> 1 & 0x3F
+                if token[0] == 'CLEAR':
+                    register[op0] = 0
+    
                 if token[0] == 'SINE':
+                    if register[0] & (1<<4):
+                        register[op0] = sine_lut[15 - (register[0] & 0xF)]
+                    else:
+                        register[op0] = sine_lut[register[0] & 0xF]
                     if verbose:
                         print(f'register[0] {register[0]}')
-                        print(f'sine_lut[register[0] >> 2] {sine_lut[register[0] >> 2]}')
-                    register[op0] = sine_lut[register[0] >> 2]
+
 
             if verbose:
                 print(f'Current state:')
@@ -211,13 +261,18 @@ def simulate(program, x_pos=0, y_pos=0, cur_time=0, user=0, verbose=False):
         
     return rgb
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-i', '--input', help='.shader file to assemble', type=str, required=False)
     parser.add_argument('-o', '--output', help='output name of the result', type=str, required=False, default='shader.bit')
     parser.add_argument('--image', help='simulate the shader and save an image of the result', type=str, required=False)
     parser.add_argument('-v', '--verbose', help='verbose output', action='store_true')
+    parser.add_argument('-s', '--summary', help='summary about all instructions', action='store_true')
     args = parser.parse_args()
+    
+    if args.summary:
+        summary()
+        return
     
     if not args.input:
         shader = """
@@ -244,8 +299,8 @@ if __name__ == "__main__":
             shader = f.read()
     
     if args.image:
-        WIDTH = 40
-        HEIGHT = 30    
+        WIDTH = 640//10
+        HEIGHT = 480//10
         
         from PIL import Image
         
@@ -260,7 +315,19 @@ if __name__ == "__main__":
                     #print(rgb)
                     pass
                 
-                pixels[x_pos,y_pos] = (rgb[2]<<6, rgb[1]<<6, rgb[0]<<6)
+                red = (rgb[2]&0x3)<<6
+                if rgb[2] & 0x1:
+                    red |= 63
+                
+                green = (rgb[1]&0x3)<<6
+                if rgb[1] & 0x1:
+                    green |= 63
+                
+                blue = (rgb[0]&0x3)<<6
+                if rgb[0] & 0x1:
+                    blue |= 63
+                
+                pixels[x_pos,y_pos] = (red, green, blue)
                 
         #img.show()
         img.save(args.image)
@@ -272,3 +339,6 @@ if __name__ == "__main__":
     
     with open(args.output, 'w') as f:
         f.write(assembled)
+
+if __name__ == "__main__":
+    main()
