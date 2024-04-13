@@ -19,16 +19,14 @@ module tiny_shader_top (
     input  logic mode_i,
     
     // SVGA signals
-    output logic [5:0]  rrggbb_o,
-    output logic        hsync_o,
-    output logic        vsync_o,
-    output logic        next_vertical_o,
-    output logic        next_frame_o
+    output logic [5:0] rrggbb_o,
+    output logic       hsync_o,
+    output logic       vsync_o,
+    output logic       next_vertical_o,
+    output logic       next_frame_o
 );
 
-    /*
-        Tiny Shader Settings
-    */
+    /* Tiny Shader Settings */
     
     localparam NUM_INSTR = 12;
 
@@ -51,9 +49,7 @@ module tiny_shader_top (
     localparam HTOTAL = WIDTH + HFRONT + HSYNC + HBACK;
     localparam VTOTAL = HEIGHT + VFRONT + VSYNC + VBACK;
 
-    /*
-        Horizontal and Vertical Timing
-    */
+    /* Horizontal and Vertical Timing */
     
     logic signed [$clog2(HTOTAL) : 0] counter_h;
     logic signed [$clog2(VTOTAL) : 0] counter_v;
@@ -123,8 +119,7 @@ module tiny_shader_top (
         end
     end
 
-    /*
-        SPI Receiver
+    /* SPI Receiver
         
         cpol       = False,
         cpha       = True,
@@ -182,9 +177,9 @@ module tiny_shader_top (
                             && counter_v >= 0 && counter_v < HEIGHT;
                             
     assign execute_shader_y = counter_v >= 0 && counter_v < HEIGHT;            
+
                             
-                            
-    // TODO if started, complete instruction
+    /* Shader Memory */
 
     shader_memory #(
         .NUM_INSTR (NUM_INSTR)
@@ -197,7 +192,8 @@ module tiny_shader_top (
         .instr_o    (instr)
     );
     
-    // Count subpixel positions
+    /* Count subpixel positions */
+
     logic [$clog2(NUM_INSTR) - 1:0] x_subpos;
     logic [$clog2(NUM_INSTR) - 1:0] y_subpos;
     
@@ -230,7 +226,8 @@ module tiny_shader_top (
         end
     end
     
-    // Count x and y positions
+    /* Count x and y positions */
+
     localparam WIDTH_SMALL = WIDTH / NUM_INSTR;
     localparam HEIGHT_SMALL = HEIGHT / NUM_INSTR;
     
@@ -260,10 +257,7 @@ module tiny_shader_top (
         end
     end
     
-    
-    /*
-        Shader execution
-    */
+    /* Shader execution */
     
     logic [5:0] rgb_o;
     logic [5:0] rgb_d;
@@ -277,8 +271,8 @@ module tiny_shader_top (
         .x_pos_i    (x_pos),
         .y_pos_i    (y_pos),
         
-        .time_i     (reg0), // TODO use time
-        .user_i     (reg1),
+        .time_i     (cur_time[7:2]),
+        .user_i     (reg0),
         
         .rgb_o      (rgb_o)
     );
@@ -291,20 +285,10 @@ module tiny_shader_top (
         end
     end
     
-    /*
-        Final Color Composition
-    */
+    /* Final Color Composition */
 
     always_comb begin
         rrggbb_o = rgb_d;
-        
-        /*if (counter_v == 32) begin
-            rrggbb_o = 6'b001100;
-        end
-        
-        if (counter_h == 32) begin
-            rrggbb_o = 6'b110000;
-        end*/
         
         if (hblank || vblank) begin
             rrggbb_o = '0;
