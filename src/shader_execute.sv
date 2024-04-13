@@ -118,19 +118,23 @@ module shader_execute (
                             skip <= !(regs[arg0] < regs[0]);
                         end
 
-                        8'b00_1100_??: begin // TODO special RGB to set all channels same, or use high bits from operand
-
+                        8'b00_1100_??: begin // *2
+                            regs[arg0] <= regs[arg0] << 1;
                         end
-                        8'b00_1101_??: begin // TODO duplicate
-
+                        8'b00_1101_??: begin // /2 
+                            regs[arg0] <= regs[arg0] >> 1;
                         end
-                        8'b00_1110_??: begin // TODO half
-
+                        8'b00_1110_??: begin // CLEAR RA
+                            regs[arg0] <= 6'b0;
                         end
                         8'b00_1111_??: begin // SINE ARG0 <= SINE_LUT[REGS[0]]
-                            regs[arg0] <= sine_lut[regs[0][5:2]]; // TODO
+                            // Mirror the sine wave
+                            if (regs[0][4] == 1'b0) begin
+                                regs[arg0] <= sine_lut[regs[0][3:0]]; // TODO
+                            end else begin
+                                regs[arg0] <= sine_lut[4'd15 - regs[0][3:0]]; // TODO
+                            end
                         end
-                        
                         
                         // Dual arg instructions 01 - Logical
                         8'b01_00_??_??: begin // AND ARG0 <= ARG0 & ARG1

@@ -28,7 +28,7 @@ module tiny_shader_top (
 
     /* Tiny Shader Settings */
     
-    localparam NUM_INSTR = 12;
+    localparam NUM_INSTR = 10;
 
     /*
         VGA 640x480 @ 60 Hz
@@ -95,7 +95,7 @@ module tiny_shader_top (
         .counter    (counter_v)
     );
     
-    logic [7:0] cur_time;
+    logic [8:0] cur_time;
     logic time_dir;
 
     always_ff @(posedge clk_i, negedge rst_ni) begin
@@ -106,12 +106,12 @@ module tiny_shader_top (
             if (next_frame_o) begin
                 if (time_dir == 1'b0) begin
                     cur_time <= cur_time + 1;
-                    if (cur_time == 255-1) begin
+                    if (&(cur_time+1)) begin
                         time_dir <= 1'b1;
                     end
                 end else begin
                     cur_time <= cur_time - 1;
-                    if (cur_time == 0+1) begin
+                    if (cur_time == 1) begin
                         time_dir <= 1'b0;
                     end
                 end
@@ -132,21 +132,11 @@ module tiny_shader_top (
     logic memory_shift;
     logic memory_load;
     
-    localparam NUM_REGS = 2;
-    localparam REG_SIZE = 8;
-    
-    // TODO
-    logic [NUM_REGS*REG_SIZE-1:0] registers;
-    
-    logic [7:0] reg0, reg1;
-    
-    assign reg0 = registers[0*8 +: 8];
-    assign reg1 = registers[1*8 +: 8];
+    logic [5:0] user;
     
     spi_receiver #(
-        .NUM_REGS       (NUM_REGS),
-        .REG_SIZE       (REG_SIZE),
-        .REG_DEFAULTS   ({NUM_REGS{8'b0}})
+        .REG_SIZE       (6),
+        .REG_DEFAULT    (6'd42)
     ) spi_receiver_inst (
         .clk_i          (clk_i),
         .rst_ni         (rst_ni),
@@ -160,12 +150,13 @@ module tiny_shader_top (
         // Mode signal
         .mode_i         (mode_i),
 
+        // Output memory
         .memory_instr_o (memory_instr),
         .memory_shift_o (memory_shift),
         .memory_load_o  (memory_load),
         
-        // Output registers
-        .registers_o (registers)
+        // Output register
+        .user_o (user)
     );
 
     // Graphics
@@ -271,8 +262,8 @@ module tiny_shader_top (
         .x_pos_i    (x_pos),
         .y_pos_i    (y_pos),
         
-        .time_i     (cur_time[7:2]),
-        .user_i     (reg0[5:0]),
+        .time_i     (cur_time[8:3]),
+        .user_i     (user),
         
         .rgb_o      (rgb_o)
     );

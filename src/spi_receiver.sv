@@ -4,9 +4,8 @@
 `default_nettype none
 
 module spi_receiver #(
-    parameter NUM_REGS = 4,
     parameter REG_SIZE = 8,
-    parameter [NUM_REGS*REG_SIZE-1:0] REG_DEFAULTS = '0
+    parameter [REG_SIZE-1:0] REG_DEFAULT = '0
 )(
     input  logic clk_i,    // clock
     input  logic rst_ni,   // reset active low
@@ -22,15 +21,16 @@ module spi_receiver #(
     // '1' = data mode
     input  logic       mode_i,
     
+    // Output memory
     output logic [7:0] memory_instr_o,  // current sprite data
     output logic       memory_shift_o,  // shift pulse
     output logic       memory_load_o,   // shift new data into sprite
     
-    // Output registers
-    output logic [NUM_REGS*REG_SIZE-1:0] registers_o
+    // Output user register
+    output logic [REG_SIZE-1:0] user_o
 );
     
-    logic [NUM_REGS*REG_SIZE-1:0] registers;
+    logic [REG_SIZE-1:0] user;
     
     // Synchronizer to prevent metastability
 
@@ -76,18 +76,14 @@ module spi_receiver #(
     assign spi_sclk_falling = spi_sclk_delayed && !spi_sclk_sync;
     
     // State Machine
-
     logic [7:0] spi_cmd;
     logic [2:0] spi_cnt;
-    logic spi_mode;
     
     always_ff @(posedge clk_i, negedge rst_ni) begin
         if (!rst_ni) begin
-            spi_mode <= 1'b0;
             spi_cnt  <= 3'd0;
-            spi_cmd  <= 8'b0;
 
-            registers <= REG_DEFAULTS;
+            user <= REG_DEFAULT;
             
             spi_miso_o <= 1'b0;
             
@@ -99,52 +95,30 @@ module spi_receiver #(
         
             if (!spi_cs_sync && spi_sclk_falling) begin
                 // Read the command
-                if (spi_mode == 1'b0) begin
-                    spi_cmd <= {spi_cmd[6:0], spi_mosi_sync};
-                    spi_cnt <= spi_cnt + 1;
-                    
-                    if (spi_cnt == 7) begin
-                        if (mode_i == 0) begin
-                            // Read the command
-                            spi_mode <= 1'b1;
-                        end else begin
-                            memory_shift_o <= 1'b1;
-                            memory_load_o  <= 1'b1;
-                        end
-                    end
-                // Write the data depending on the command
-                end else begin
-                    case (spi_cmd)
-                        8'd0: registers[0*8 +: 8] <= {registers[0*8 +: 7], spi_mosi_sync};
-                        8'd1: registers[1*8 +: 8] <= {registers[1*8 +: 7], spi_mosi_sync};
-                        8'd2: registers[2*8 +: 8] <= {registers[2*8 +: 7], spi_mosi_sync};
-                        8'd3: registers[3*8 +: 8] <= {registers[3*8 +: 7], spi_mosi_sync};
-                    endcase
-                    
-                    spi_cnt <= spi_cnt + 1;
 
-                    if (spi_cnt == 7) begin
-                        spi_mode <= 1'b0;
+                spi_cmd <= {spi_cmd[6:0], spi_mosi_sync};
+                spi_cnt <= spi_cnt + 1;
+                
+                if (spi_cnt == 7) begin
+                    if (mode_i == 0) begin
+                        // Read the command
+                        user <= spi_cmd[REG_SIZE-1:0]; // TODO error
+                    end else begin
+                        memory_shift_o <= 1'b1;
+                        memory_load_o  <= 1'b1;
                     end
                 end
             end
             
             // Echo back the previous values
             if (!spi_cs_sync && spi_sclk_rising) begin
-                if (spi_mode == 1'b1) begin
-                    case (spi_cmd)
-                        8'd0: spi_miso_o <= registers[0*8 + 7];
-                        8'd1: spi_miso_o <= registers[1*8 + 7];
-                        8'd2: spi_miso_o <= registers[2*8 + 7];
-                        8'd3: spi_miso_o <= registers[3*8 + 7];
-                    endcase
-                end
+                spi_miso_o <= spi_cmd[7];
             end
         end
     end
 
     // Assignments
-    assign registers_o = registers;
+    assign user_o = user;
     assign memory_instr_o = spi_cmd;
 
 endmodule

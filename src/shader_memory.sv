@@ -21,19 +21,19 @@ module shader_memory #(
     always_ff @(posedge clk_i, negedge rst_ni) begin
         if (!rst_ni) begin
             `ifdef COCOTB_SIM
-            $readmemb("../sw/binary/test4.bit", memory);
+            $readmemb("../sw/binary/test7.bit", memory);
             `else
             // Load the default program
             memory[0] <= 8'b00_0100_00; // GETX R0
             memory[1] <= 8'b00_0101_01; // GETY R1
             memory[2] <= 8'b01_11_01_00; // XOR R0 R1
             memory[3] <= 8'b00_0000_00; // SETRGB R0
-            memory[4] <= 8'b01_11_00_00; // XOR R0 R0
-            memory[5] <= 8'b01_11_00_00; // XOR R0 R0
-            memory[6] <= 8'b01_11_00_00; // XOR R0 R0
-            memory[7] <= 8'b01_11_00_00; // XOR R0 R0
-            memory[8] <= 8'b01_11_00_00; // XOR R0 R0
-            memory[9] <= 8'b01_11_00_00; // XOR R0 R0
+            memory[4] <= 8'b01_00_00_00; // NOP
+            memory[5] <= 8'b01_00_00_00; // NOP
+            memory[6] <= 8'b01_00_00_00; // NOP
+            memory[7] <= 8'b01_00_00_00; // NOP
+            memory[8] <= 8'b01_00_00_00; // NOP
+            memory[9] <= 8'b01_00_00_00; // NOP
             `endif
         end else begin
             if (shift_i) begin
