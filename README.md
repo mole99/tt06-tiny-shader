@@ -24,7 +24,7 @@ Here is an animation using the time register:
 
 ## Architecture
 
-Tiny Shader has four (mostly) general purpose registers, REG0 to REG4. REG0 is special in a way as it is the target or destination register for some instructions. All registers are 6 bit wide.
+Tiny Shader has four (mostly) general purpose registers, REG0 to REG3. REG0 is special in a way as it is the target or destination register for some instructions. All registers are 6 bit wide.
 
 ### Input
 
@@ -66,10 +66,10 @@ The following instructions are supported by Tiny Shader. A program consists of 1
 ### Branches
 |Instruction|Operation|Description|
 |-----------|---------|-----------|
-|IFEQ RA|TAKE <= RA == REG0|Execute the next instruction if RA equals REG0.|
-|IFNE RA|TAKE <= RA != REG0|Execute the next instruction if RA does not equal REG0.|
-|IFGE RA|TAKE <= RA >= REG0|Execute the next instruction if RA is greater then or equal REG0.|
-|IFLT RA|TAKE <= RA < REG0|Execute the next instruction if RA is less than REG0.|
+|IFEQ RA|TAKE <= RA == R0|Execute the next instruction if RA equals R0.|
+|IFNE RA|TAKE <= RA != R0|Execute the next instruction if RA does not equal R0.|
+|IFGE RA|TAKE <= RA >= R0|Execute the next instruction if RA is greater then or equal R0.|
+|IFLT RA|TAKE <= RA < R0|Execute the next instruction if RA is less than R0.|
 ### Arithmetic
 |Instruction|Operation|Description|
 |-----------|---------|-----------|
@@ -84,7 +84,7 @@ The following instructions are supported by Tiny Shader. A program consists of 1
 ### Special
 |Instruction|Operation|Description|
 |-----------|---------|-----------|
-|SINE RA|RA <= SINE[REG0[4:0]]|Get the sine value for REG0 and write into RA. The sine value LUT has 32 entries.|
+|SINE RA|RA <= SINE[R0[4:0]]|Get the sine value for R0 and write into RA. The sine value LUT has 32 entries.|
 ### Boolean
 |Instruction|Operation|Description|
 |-----------|---------|-----------|

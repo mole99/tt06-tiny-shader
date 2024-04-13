@@ -15,15 +15,15 @@ instructions = {
     'GETTIME' : {'format': 'single_operand', 'opcode': '00_0110', 'short': 'RA <= TIME', 'description': 'Set the specified register to the current time value, increases with each frame.', 'category': 'Input'},
     'GETUSER' : {'format': 'single_operand', 'opcode': '00_0111', 'short': 'RA <= USER', 'description': 'Set the specified register to the user value, can be set via the SPI interface.', 'category': 'Input'},
     
-    'IFEQ' : {'format': 'single_operand', 'opcode': '00_1000', 'short': 'TAKE <= RA == REG0', 'description': 'Execute the next instruction if RA equals REG0.', 'category': 'Branches'},
-    'IFNE' : {'format': 'single_operand', 'opcode': '00_1001', 'short': 'TAKE <= RA != REG0', 'description': 'Execute the next instruction if RA does not equal REG0.', 'category': 'Branches'},
-    'IFGE' : {'format': 'single_operand', 'opcode': '00_1010', 'short': 'TAKE <= RA >= REG0', 'description': 'Execute the next instruction if RA is greater then or equal REG0.', 'category': 'Branches'},
-    'IFLT' : {'format': 'single_operand', 'opcode': '00_1011', 'short': 'TAKE <= RA < REG0', 'description': 'Execute the next instruction if RA is less than REG0.', 'category': 'Branches'},
+    'IFEQ' : {'format': 'single_operand', 'opcode': '00_1000', 'short': 'TAKE <= RA == R0', 'description': 'Execute the next instruction if RA equals R0.', 'category': 'Branches'},
+    'IFNE' : {'format': 'single_operand', 'opcode': '00_1001', 'short': 'TAKE <= RA != R0', 'description': 'Execute the next instruction if RA does not equal R0.', 'category': 'Branches'},
+    'IFGE' : {'format': 'single_operand', 'opcode': '00_1010', 'short': 'TAKE <= RA >= R0', 'description': 'Execute the next instruction if RA is greater then or equal R0.', 'category': 'Branches'},
+    'IFLT' : {'format': 'single_operand', 'opcode': '00_1011', 'short': 'TAKE <= RA < R0', 'description': 'Execute the next instruction if RA is less than R0.', 'category': 'Branches'},
     
     'DOUBLE' : {'format': 'single_operand', 'opcode': '00_1100', 'short': 'RA <= RA * 2', 'description': 'Double the value of RA.', 'category': 'Arithmetic'},
     'HALF' : {'format': 'single_operand', 'opcode': '00_1101', 'short': 'RA <= RA / 2', 'description': 'Half the value of RA.', 'category': 'Arithmetic'},
     'CLEAR' : {'format': 'single_operand', 'opcode': '00_1110', 'short': 'RA <= 0', 'description': 'Clear RA by writing 0.', 'category': 'Load'},
-    'SINE' : {'format': 'single_operand', 'opcode': '00_1111', 'short': 'RA <= SINE[REG0[4:0]]', 'description': 'Get the sine value for REG0 and write into RA. The sine value LUT has 32 entries.', 'category': 'Special'},
+    'SINE' : {'format': 'single_operand', 'opcode': '00_1111', 'short': 'RA <= SINE[R0[4:0]]', 'description': 'Get the sine value for R0 and write into RA. The sine value LUT has 32 entries.', 'category': 'Special'},
     
     # Boolean operations
     'AND' : {'format': 'dual_operand', 'opcode': '01_00', 'short': 'RA <= RA & RB', 'description': 'Boolean AND of RA and RB, result written into RA.', 'category': 'Boolean'},
