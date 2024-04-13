@@ -1,7 +1,8 @@
-# Hello!
+# Hello World!
+# Draw one vertical and one horizontal line
+# at X=10, Y=10
 
-    # This is a test #213
-
+CLEAR R0
 SETRGB R0
 
 GETX R1
@@ -14,6 +15,3 @@ SETRGB R1
 
 IFEQ R2
 SETRGB R2
-
-NOP
-NOP

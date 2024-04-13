@@ -21,5 +21,3 @@ GETY R1
 # set color to white
 IFGE R1
 SETRGB R3
-
-NOP

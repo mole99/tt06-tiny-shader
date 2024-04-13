@@ -188,7 +188,7 @@ async def test_vga_load(dut, shader_name='test7'):
     await ClockCycles(dut.clk, 10)
 
 tf = TestFactory(test_function=test_vga_load)
-tf.add_option(name='shader_name', optionlist=['test1', 'test2', 'test7'])
+tf.add_option(name='shader_name', optionlist=['test1', 'test2', 'test3', 'test4', 'test5', 'test6', 'test7'])
 tf.generate_tests()
 
 @cocotb.test(skip=os.environ.get('GL_TEST', None) != None)

@@ -45,7 +45,8 @@ instructions = {
 }
 
 
-def get_syntax(fmt):
+def get_operands(fmt):
+    """Return operand string"""
 
     if fmt == 'immediate':
         return 'IMMEDIATE'
@@ -53,10 +54,13 @@ def get_syntax(fmt):
         return 'RA'
     elif fmt == 'dual_operand':
         return 'RA RB'
+    elif fmt == 'pseudo':
+        return ''
     else:
         return 'UNKNOWN'
 
 def summary():
+    """Print a summary of all instructions as Markdown table"""
     categories = {}
 
     for name, instruction in instructions.items():
@@ -73,7 +77,7 @@ def summary():
         
         for name, instruction in category.items():
         
-            print(f'|{name} {get_syntax(instruction["format"])}|{instruction["short"]}|{instruction["description"]}|')
+            print(f'|{name} {get_operands(instruction["format"])}|{instruction["short"]}|{instruction["description"]}|')
 
 def get_register(string):
     if string[0] != 'R':
@@ -83,7 +87,9 @@ def get_register(string):
     return int(string[1:])
 
 def assemble(program, verbose=False):
-    assembled = ''
+    """Assemble the shader into binary text format"""
+
+    assembled = []
 
     # Remove all comments
     program = os.linesep.join([s.split('#', 1)[0] for s in program.splitlines()])
@@ -102,13 +108,13 @@ def assemble(program, verbose=False):
             instr = instructions[token[0]]
             
             if instr['format'] == 'pseudo':
-                assembled += f'{instr["opcode"]} // {line}\n'
-            
+                assembled.append(f'{instr["opcode"]} // {line}')
+
             elif instr['format'] == 'immediate':
                 if (len(token) != 2):
                     print(f'Instruction {token[0]} expects one immediate')
                 imm = int(token[1])
-                assembled += f'{instr["opcode"]}_{imm:06b} // {line}\n'
+                assembled.append(f'{instr["opcode"]}_{imm:06b} // {line}')
 
             elif instr['format'] == 'dual_operand':
                 if (len(token) != 3):
@@ -117,7 +123,7 @@ def assemble(program, verbose=False):
                 op0 = get_register(token[1])
                 op1 = get_register(token[2])
 
-                assembled += f'{instr["opcode"]}_{op1:02b}_{op0:02b} // {line}\n'
+                assembled.append(f'{instr["opcode"]}_{op1:02b}_{op0:02b} // {line}')
 
             elif instr['format'] == 'single_operand':
                 if (len(token) != 2):
@@ -125,7 +131,7 @@ def assemble(program, verbose=False):
 
                 op0 = get_register(token[1])
 
-                assembled += f'{instr["opcode"]}_{op0:02b} // {line}\n'
+                assembled.append(f'{instr["opcode"]}_{op0:02b} // {line}')
             
             else:
                 print(f'Instruction format unknown: {instr["format"]}')
@@ -136,6 +142,7 @@ def assemble(program, verbose=False):
     return assembled
 
 def simulate(program, x_pos=0, y_pos=0, cur_time=0, user=0, verbose=False):
+    """Simulate the shader program"""
 
     register = [0, 0, 0, 0]
     rgb = [0, 0, 0]
@@ -249,7 +256,6 @@ def simulate(program, x_pos=0, y_pos=0, cur_time=0, user=0, verbose=False):
                     if verbose:
                         print(f'register[0] {register[0]}')
 
-
             if verbose:
                 print(f'Current state:')
                 print(f'register: {register}')
@@ -298,9 +304,11 @@ def main():
         with open(args.input, 'r') as f:
             shader = f.read()
     
+    NUM_INSTR = 10
+    
     if args.image:
-        WIDTH = 640//10
-        HEIGHT = 480//10
+        WIDTH = 640//NUM_INSTR
+        HEIGHT = 480//NUM_INSTR
         
         from PIL import Image
         
@@ -333,6 +341,16 @@ def main():
         img.save(args.image)
 
     assembled = assemble(shader, args.verbose)
+    
+    # Fill up with nops
+    
+    while len(assembled) < NUM_INSTR:
+        assembled.append('01_00_00_00 // NOP')
+    
+    if len(assembled) > NUM_INSTR:
+        print('Error: Too many instruction!')
+    
+    assembled = '\n'.join(assembled)
     
     if args.verbose:
         print(assembled)
