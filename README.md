@@ -28,17 +28,17 @@ The shader has four sources to get input from:
 - `X` - X position of the current pixel
 - `Y` - Y position of the current pixel
 - `TIME` - Increases at 7.5 Hz, before it overflow it counts down again.
-- `USER` - Value that can be set via the SPI interface.
+- `USER` - Register that can be set via the SPI interface.
 
 ### Output
 
 The goal of the shader is to determine the final output color:
 
-- `RGB` - The output color for the current pixel. Channel R, G and B can be set individually.
+- `RGB` - The output color for the current pixel. Channel R, G and B can be set individually. If not set, the color of the previous pixel is used.
 
 ### Sine Look Up Table
 
-Tiny Shader contains a LUT with 16 6-bit sine values for one quarter of the sine wave. When accesing the LUT, the entries are automatically mirrored to form one half of a sine wave with a total of 32 values.
+Tiny Shader contains a LUT with 16 6-bit sine values for a quarter of a sine wave. When accesing the LUT, the entries are automatically mirrored to form one half of a sine wave with a total of 32 6-bit values.
 
 ## Instructions
 
@@ -85,8 +85,8 @@ The following instructions are supported by Tiny Shader. A program consists of 1
 |-----------|---------|-----------|
 |AND RA RB|RA <= RA & RB|Boolean AND of RA and RB, result written into RA.|
 |OR RA RB|RA <= RA \| RB|Boolean OR of RA and RB, result written into RA.|
-|NOT RA RB|RA <= ~RB|Boolean NOT of RB, result written into RA.|
-|XOR RA RB|RA <= RA ^ RB|Boolean XOR of RA and RB, result written into RA.|
+|NOT RA RB|RA <= ~RB|Invert all bits of RB, result written into RA.|
+|XOR RA RB|RA <= RA ^ RB|XOR of RA and RB, result written into RA.|
 ### Move
 |Instruction|Operation|Description|
 |-----------|---------|-----------|
