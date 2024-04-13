@@ -277,6 +277,8 @@ def main():
     parser.add_argument('--image', help='simulate the shader and save an image of the result', type=str, required=False)
     parser.add_argument('-v', '--verbose', help='verbose output', action='store_true')
     parser.add_argument('-s', '--summary', help='summary about all instructions', action='store_true')
+    parser.add_argument('-t', '--time', help='simulate for t timesteps', default=1, type=int)
+    
     args = parser.parse_args()
     
     if args.summary:
@@ -310,38 +312,44 @@ def main():
     NUM_INSTR = 10
     
     if args.image:
-        WIDTH = 640//NUM_INSTR
-        HEIGHT = 480//NUM_INSTR
-        
-        from PIL import Image
-        
-        img = Image.new(mode="RGB", size=(WIDTH, HEIGHT))
-        pixels = img.load()
-        
-        for y_pos in range(HEIGHT):
-            for x_pos in range(WIDTH):
-                rgb = simulate(shader, x_pos, y_pos, time=0, user=42, verbose=args.verbose)
-                
-                if args.verbose:
-                    #print(rgb)
-                    pass
-                
-                red = (rgb[2]&0x3)<<6
-                if rgb[2] & 0x1:
-                    red |= 63
-                
-                green = (rgb[1]&0x3)<<6
-                if rgb[1] & 0x1:
-                    green |= 63
-                
-                blue = (rgb[0]&0x3)<<6
-                if rgb[0] & 0x1:
-                    blue |= 63
-                
-                pixels[x_pos,y_pos] = (red, green, blue)
-                
-        #img.show()
-        img.save(args.image)
+    
+        for time in range(args.time):
+    
+            WIDTH = 640//NUM_INSTR
+            HEIGHT = 480//NUM_INSTR
+            
+            from PIL import Image
+            
+            img = Image.new(mode="RGB", size=(WIDTH, HEIGHT))
+            pixels = img.load()
+            
+            for y_pos in range(HEIGHT):
+                for x_pos in range(WIDTH):
+                    rgb = simulate(shader, x_pos, y_pos, time=time, user=42, verbose=args.verbose)
+                    
+                    if args.verbose:
+                        #print(rgb)
+                        pass
+                    
+                    red = (rgb[2]&0x3)<<6
+                    if rgb[2] & 0x1:
+                        red |= 63
+                    
+                    green = (rgb[1]&0x3)<<6
+                    if rgb[1] & 0x1:
+                        green |= 63
+                    
+                    blue = (rgb[0]&0x3)<<6
+                    if rgb[0] & 0x1:
+                        blue |= 63
+                    
+                    pixels[x_pos,y_pos] = (red, green, blue)
+                    
+            #img.show()
+            if args.time == 1:
+                img.save(f'{args.image}')
+            else:
+                img.save(f'{os.path.splitext(args.image)[0]}_{time:02d}.png')
 
     assembled = assemble(shader, args.verbose)
     
