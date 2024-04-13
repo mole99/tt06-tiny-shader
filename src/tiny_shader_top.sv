@@ -56,6 +56,10 @@ module tiny_shader_top (
     
     logic hblank;
     logic vblank;
+    logic hsync;
+    logic vsync;
+    logic next_vertical;
+    logic next_frame;
      
     // Horizontal timing
     timing #(
@@ -70,12 +74,12 @@ module tiny_shader_top (
         .enable     (1'b1),
         .reset_n    (rst_ni),
         .inc_1_or_4 (1'b0),
-        .sync       (hsync_o),
+        .sync       (hsync),
         .blank      (hblank),
-        .next       (next_vertical_o),
+        .next       (next_vertical),
         .counter    (counter_h)
     );
-    
+
     // Vertical timing
     timing #(
         .RESOLUTION     (HEIGHT),
@@ -86,12 +90,12 @@ module tiny_shader_top (
         .POLARITY       (1)
     ) timing_ver (
         .clk        (clk_i),
-        .enable     (next_vertical_o),
+        .enable     (next_vertical),
         .reset_n    (rst_ni),
         .inc_1_or_4 (1'b0),
-        .sync       (vsync_o),
+        .sync       (vsync),
         .blank      (vblank),
-        .next       (next_frame_o),
+        .next       (next_frame),
         .counter    (counter_v)
     );
     
@@ -103,7 +107,7 @@ module tiny_shader_top (
             cur_time <= '0;
             time_dir <= '0;
         end else begin
-            if (next_frame_o) begin
+            if (next_frame) begin
                 if (time_dir == 1'b0) begin
                     cur_time <= cur_time + 1;
                     if (&(cur_time+1)) begin
@@ -205,7 +209,7 @@ module tiny_shader_top (
             if (execute_shader_y) begin
             
                 // Y sub position
-                if (next_vertical_o) begin
+                if (next_vertical) begin
                     y_subpos <= y_subpos + 1;
                     
                     if (y_subpos == NUM_INSTR-1) begin
@@ -234,7 +238,7 @@ module tiny_shader_top (
                 x_pos <= x_pos + 1;
             end
 
-            if (next_vertical_o) begin
+            if (next_vertical) begin
                 x_pos <= '0;
 
                 if (y_subpos == NUM_INSTR-1) begin
@@ -242,7 +246,7 @@ module tiny_shader_top (
                 end
             end
 
-            if (next_frame_o) begin
+            if (next_frame) begin
                 y_pos <= '0;
             end
         end
@@ -269,21 +273,36 @@ module tiny_shader_top (
     );
 
     // Capture output color, after shader completed
-    always_ff @(posedge clk_i) begin
+    
+    logic capture;
+    always_ff @(posedge clk_i, negedge rst_ni) begin
+        if (!rst_ni) begin
+            capture <= '0;
+            rgb_d <= '0;
+        end else begin
+            capture <= x_subpos == NUM_INSTR-1;
 
-        if (x_subpos == NUM_INSTR-1) begin
-            rgb_d <= rgb_o;
+            if (capture) begin
+                rgb_d <= rgb_o;
+                
+                // Blanking intervall
+                if (hblank || vblank) begin
+                    rgb_d <= '0;
+                end
+            end
         end
     end
     
-    /* Final Color Composition */
-
-    always_comb begin
-        rrggbb_o = rgb_d;
-        
-        if (hblank || vblank) begin
-            rrggbb_o = '0;
-        end
+    assign rrggbb_o = rgb_d;
+    
+    // Delay output signals one cycle
+    // to account for rgb_d
+    always_ff @(posedge clk_i) begin
+        hsync_o         <= hsync;
+        vsync_o         <= vsync;
+        next_vertical_o <= next_vertical;
+        next_frame_o    <= next_frame;
     end
+
 
 endmodule
