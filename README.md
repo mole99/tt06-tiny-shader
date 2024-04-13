@@ -20,7 +20,7 @@ These images and many more can be generated with Tiny Shader. Note, that shaders
 
 Here is an animation using the time register:
 
-![animation.gif](/home/leo/Nextcloud/Programmieren/ASIC/tt06-tiny-shader/images/animation.gif)
+![animation.gif](images/animation.gif)
 
 ## Architecture
 
