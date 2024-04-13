@@ -82,11 +82,10 @@ module spi_receiver #(
     always_ff @(posedge clk_i, negedge rst_ni) begin
         if (!rst_ni) begin
             spi_cnt  <= 3'd0;
-
             user <= REG_DEFAULT;
-            
+            spi_cmd <= '0;
             spi_miso_o <= 1'b0;
-            
+
             memory_shift_o <= 1'b0;
             memory_load_o  <= 1'b0;
         end else begin
@@ -102,7 +101,7 @@ module spi_receiver #(
                 if (spi_cnt == 7) begin
                     if (mode_i == 0) begin
                         // Read the command
-                        user <= spi_cmd[REG_SIZE-1:0]; // TODO error
+                        user <= {spi_cmd[6:0], spi_mosi_sync};
                     end else begin
                         memory_shift_o <= 1'b1;
                         memory_load_o  <= 1'b1;
