@@ -2,18 +2,20 @@
 
 # Tiny Shader
 
-Modern GPUs use fragment shaders to 
+Modern GPUs use fragment shaders to determine the color for each pixel. Thousands of shading units run in parallel to execute a program, the fragment shader, to determine the final color for each pixel.
 
-
-
-Meaning for each pixel a small program is executed to determine the final color.
+Tiny Shader mimics such a shading unit, it executes a shader of 10 instructions for each pixel. No framebuffer is used, the color values are generated on the fly. Tiny Shader also offers an SPI interface with which a new shader can be loaded. The final result can be viewed via VGA output.
 
 ## Examples
 
+These images and many more can be generated with Tiny Shader. Note, that using the time input the shaders can even be animated.
+
 |Image|Shader|
 |-|-|
-|![default.png](images/default.png)| <pre>GETX R0<br>GETY R1<br>XOR R0 R1<br>SETRGB R0<br>NOP<br>NOP<br>NOP<br>NOP<br>NOP<br>NOP<br>NOP<br>NOP</pre> |
-|![test4.png](images/test4.png)||
+|![test2.png](images/test2.png)| <pre>GETX R0<br>SINE R1<br>SETR R1<br>GETY R0<br>SINE R1<br>SETG R1</pre> |
+|![test4.png](images/test4.png)| <pre>GETX R0<br>GETY R1<br>XOR R0 R1<br>SETRGB R0</pre> |
+|![test5.png](images/test5.png)| <pre>GETY R1<br>LDI 1<br>AND R1 R0<br>IFNE R1<br>LDI 63<br>IFEQ R1<br>LDI 0<br>SETRGB R0</pre> |
+|![test7.png](images/test7.png)| <pre>CLEAR R3<br>GETX R0<br>GETUSER R1<br>ADD R0 R1<br>SETRGB R0<br>SINE R0<br>HALF R0<br>GETY R1<br>IFGE R1<br>SETRGB R3</pre> |
 
 ## Architecture
 
@@ -25,7 +27,7 @@ The shader has four sources to get input from:
 
 - `X` - X position of the current pixel
 - `Y` - Y position of the current pixel
-- `TIME` - Increases with the frame number.
+- `TIME` - Increases at 7.5 Hz, before it overflow it counts down again.
 - `USER` - Value that can be set via the SPI interface.
 
 ### Output
@@ -36,68 +38,68 @@ The goal of the shader is to determine the final output color:
 
 ### Sine Look Up Table
 
-TODO
-
+Tiny Shader contains a LUT with 16 6-bit sine values for one quarter of the sine wave. When accesing the LUT, the entries are automatically mirrored to form one half of a sine wave with a total of 32 values.
 
 ## Instructions
 
-The following instructions are supported by Tiny Shader. A program consists of 12 (TODO) instructions and is executed for each pixel individually. The actual resolution is therefore less than the VGA resolution.
+The following instructions are supported by Tiny Shader. A program consists of 10 instructions and is executed for each pixel individually. The actual resolution is therefore one tenth of the VGA resolution (64x48 pixel).
 
 ### Output
 |Instruction|Operation|Description|
 |-----------|---------|-----------|
-|SETRGB REGA|RGB <= REG|Set the output color to the value of the specified register.|
-|SETR REGA|R <= REG[1:0]|Set the red channel of the output color to the lower two bits of the specified register.|
-|SETG REGA|G <= REG[1:0]|Set the green channel of the output color to the lower two bits of the specified register.|
-|SETB REGA|B <= REG[1:0]|Set the blue channel of the output color to the lower two bits of the specified register.|
+|SETRGB RA|RGB <= RA|Set the output color to the value of the specified register.|
+|SETR RA|R <= RA[1:0]|Set the red channel of the output color to the lower two bits of the specified register.|
+|SETG RA|G <= RA[1:0]|Set the green channel of the output color to the lower two bits of the specified register.|
+|SETB RA|B <= RA[1:0]|Set the blue channel of the output color to the lower two bits of the specified register.|
 ### Input
 |Instruction|Operation|Description|
 |-----------|---------|-----------|
-|GETX REGA|REG <= X|Set the specified register to the x position of the current pixel.|
-|GETY REGA|REG <= Y|Set the specified register to the y position of the current pixel.|
-|GETTIME REGA|REG <= TIME|Set the specified register to the current time value, increases with each frame.|
-|GETUSER REGA|REG <= USER|Set the specified register to the user value, can be set via the SPI interface.|
+|GETX RA|RA <= X|Set the specified register to the x position of the current pixel.|
+|GETY RA|RA <= Y|Set the specified register to the y position of the current pixel.|
+|GETTIME RA|RA <= TIME|Set the specified register to the current time value, increases with each frame.|
+|GETUSER RA|RA <= USER|Set the specified register to the user value, can be set via the SPI interface.|
 ### Branches
 |Instruction|Operation|Description|
 |-----------|---------|-----------|
-|IFEQ REGA|TAKE <= REG == REG0|Execute the next instruction if REG equals REG0.|
-|IFNE REGA|TAKE <= REG != REG0|Execute the next instruction if REG does not equal REG0.|
-|IFGE REGA|TAKE <= REG >= REG0|Execute the next instruction if REG is greater then or equal REG0.|
-|IFLT REGA|TAKE <= REG < REG0|Execute the next instruction if REG is less than REG0.|
-### TODO
-|Instruction|Operation|Description|
-|-----------|---------|-----------|
-|TODO0 REGA|TODO|TODO.|
-|TODO1 REGA|TODO|TODO.|
-|TODO2 REGA|TODO|TODO.|
-### Special
-|Instruction|Operation|Description|
-|-----------|---------|-----------|
-|SINE REGA|REG <= SINE[REG0[5:2]]|Get the sine value for REG0 and write into REG.|
-### Boolean
-|Instruction|Operation|Description|
-|-----------|---------|-----------|
-|AND REGA, REGB|REGA <= REGA & REGB|Boolean AND of REGA and REGB, result written into REGA.|
-|OR REGA, REGB|REGA <= REGA | REGB|Boolean OR of REGA and REGB, result written into REGA.|
-|NOT REGA, REGB|REGA <= ~REGB|Boolean NOT of REGB, result written into REGA.|
-|XOR REGA, REGB|REGA <= REGA ^ REGB|Boolean XOR of REGA and REGB, result written into REGA.|
-### Move
-|Instruction|Operation|Description|
-|-----------|---------|-----------|
-|MOV REGA, REGB|REGA <= REGB|Move value of REGB into REGA.|
+|IFEQ RA|TAKE <= RA == REG0|Execute the next instruction if RA equals REG0.|
+|IFNE RA|TAKE <= RA != REG0|Execute the next instruction if RA does not equal REG0.|
+|IFGE RA|TAKE <= RA >= REG0|Execute the next instruction if RA is greater then or equal REG0.|
+|IFLT RA|TAKE <= RA < REG0|Execute the next instruction if RA is less than REG0.|
 ### Arithmetic
 |Instruction|Operation|Description|
 |-----------|---------|-----------|
-|ADD REGA, REGB|REGA <= REGA + REGB|Add REGA and REGB, result written into REGA.|
-### Shift
-|Instruction|Operation|Description|
-|-----------|---------|-----------|
-|SHIFTL REGA, REGB|REGA <= REGA << REGB|Shift REGA with REGB to the left, result written into REGA.|
-|SHIFTR REGA, REGB|REGA <= REGA >> REGB|Shift REGA with REGB to the right, result written into REGA.|
+|DOUBLE RA|RA <= RA * 2|Double the value of RA.|
+|HALF RA|RA <= RA / 2|Half the value of RA.|
+|ADD RA RB|RA <= RA + RB|Add RA and RB, result written into RA.|
 ### Load
 |Instruction|Operation|Description|
 |-----------|---------|-----------|
-|LDI IMMEDIATE|REGA <= IMMEDIATE|Load an immediate value into REGA.|
+|CLEAR RA|RA <= 0|Clear RA by writing 0.|
+|LDI IMMEDIATE|RA <= IMMEDIATE|Load an immediate value into RA.|
+### Special
+|Instruction|Operation|Description|
+|-----------|---------|-----------|
+|SINE RA|RA <= SINE[REG0[4:0]]|Get the sine value for REG0 and write into RA. The sine value LUT has 32 entries.|
+### Boolean
+|Instruction|Operation|Description|
+|-----------|---------|-----------|
+|AND RA RB|RA <= RA & RB|Boolean AND of RA and RB, result written into RA.|
+|OR RA RB|RA <= RA \| RB|Boolean OR of RA and RB, result written into RA.|
+|NOT RA RB|RA <= ~RB|Boolean NOT of RB, result written into RA.|
+|XOR RA RB|RA <= RA ^ RB|Boolean XOR of RA and RB, result written into RA.|
+### Move
+|Instruction|Operation|Description|
+|-----------|---------|-----------|
+|MOV RA RB|RA <= RB|Move value of RB into RA.|
+### Shift
+|Instruction|Operation|Description|
+|-----------|---------|-----------|
+|SHIFTL RA RB|RA <= RA << RB|Shift RA with RB to the left, result written into RA.|
+|SHIFTR RA RB|RA <= RA >> RB|Shift RA with RB to the right, result written into RA.|
+### Pseudo
+|Instruction|Operation|Description|
+|-----------|---------|-----------|
+|NOP |R0 <= R0 & R0|No operation.|
 
 ## Tiny Tapeout
 
