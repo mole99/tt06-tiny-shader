@@ -24,15 +24,15 @@ module shader_memory #(
             `else
             // Load the default program (test4)
             memory[0] <= 8'b00_0100_00; // GETX R0
-            memory[0] <= 8'b00_0101_01; // GETY R1
-            memory[0] <= 8'b01_11_01_00; // XOR R0 R1
-            memory[0] <= 8'b00_0110_10; // GETTIME R2
-            memory[0] <= 8'b10_01_10_00; // ADD R0 R2
-            memory[0] <= 8'b00_0000_00; // SETRGB R0
-            memory[0] <= 8'b01_00_00_00; // NOP
-            memory[0] <= 8'b01_00_00_00; // NOP
-            memory[0] <= 8'b01_00_00_00; // NOP
-            memory[0] <= 8'b01_00_00_00; // NOP
+            memory[1] <= 8'b00_0101_01; // GETY R1
+            memory[2] <= 8'b01_11_01_00; // XOR R0 R1
+            memory[3] <= 8'b00_0110_10; // GETTIME R2
+            memory[4] <= 8'b10_01_10_00; // ADD R0 R2
+            memory[5] <= 8'b00_0000_00; // SETRGB R0
+            memory[6] <= 8'b01_00_00_00; // NOP
+            memory[7] <= 8'b01_00_00_00; // NOP
+            memory[8] <= 8'b01_00_00_00; // NOP
+            memory[9] <= 8'b01_00_00_00; // NOP
             `endif
         end else begin
             if (shift_i) begin
