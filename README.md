@@ -20,7 +20,11 @@ These images and many more can be generated with Tiny Shader. Note, that shaders
 
 Here is an animation using the time register:
 
+<div align="center">
+
 ![animation.gif](images/animation.gif)
+
+</div>
 
 ## Architecture
 
