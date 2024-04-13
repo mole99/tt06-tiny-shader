@@ -11,9 +11,11 @@ Tiny Shader mimics such a shading unit and executes a shader with 10 instruction
 These images and many more can be generated with Tiny Shader. Note, that shaders can even be animated by acessing the user or time register.
 
 <div align="center">
+
 |![test2.png](images/test2.png)|![test4.png](images/test4.png)|![test5.png](images/test5.png)|![test7.png](images/test7.png)|
 |-|-|-|-|
 | <pre>GETX R0<br>SINE R1<br>SETR R1<br>GETY R0<br>SINE R1<br>SETG R1</pre> | <pre>GETX R0<br>GETY R1<br>XOR R0 R1<br>SETRGB R0</pre> | <pre>GETY R1<br>LDI 1<br>AND R1 R0<br>IFNE R1<br>LDI 63<br>IFEQ R1<br>LDI 0<br>SETRGB R0</pre> | <pre>CLEAR R3<br>GETX R0<br>GETUSER R1<br>ADD R0 R1<br>SETRGB R0<br>SINE R0<br>HALF R0<br>GETY R1<br>IFGE R1<br>SETRGB R3</pre> |
+
 </div>
 
 Here is an animation using the time register:
