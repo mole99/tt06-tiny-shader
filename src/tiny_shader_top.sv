@@ -205,8 +205,8 @@ module tiny_shader_top (
     
     always_ff @(posedge clk_i, negedge rst_ni) begin
         if (!rst_ni) begin
-            x_subpos = '0;
-            y_subpos = '0;
+            x_subpos <= '0;
+            y_subpos <= '0;
         end else begin
             if (execute_shader_x || x_subpos > 0) begin
                 // X sub position
