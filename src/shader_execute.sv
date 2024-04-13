@@ -9,8 +9,11 @@ module shader_execute (
     input  logic [7:0]  instr_i,
     input  logic        execute,
     
-    input logic  [5:0]  x_pos_i,
-    input logic  [5:0]  y_pos_i,
+    input  logic  [5:0]  x_pos_i,
+    input  logic  [5:0]  y_pos_i,
+    
+    input  logic [5:0] time_i,
+    input  logic [5:0] user_i,
     
     output logic [5:0]  rgb_o
 );
@@ -40,8 +43,7 @@ module shader_execute (
     logic [5:0] sine_lut [16];
 
     logic [5:0] rgb;
-    logic [5:0] cur_time;
-    logic [5:0] user;
+
     logic skip;
 
     always_ff @(posedge clk_i) begin
@@ -69,8 +71,6 @@ module shader_execute (
 
             
             rgb      <= 6'b000000;
-            cur_time <= 5;
-            user     <= 42;
             skip     <= 1'b0;
 
         end else begin
@@ -102,10 +102,10 @@ module shader_execute (
                             regs[arg0] <= y_pos_i;
                         end
                         8'b00_0110_??: begin //  GETTIME ARG0 <= TIME
-                            regs[arg0] <= cur_time;
+                            regs[arg0] <= time_i;
                         end
                         8'b00_0111_??: begin //  GETUSER ARG0 <= USER
-                            regs[arg0] <= user;
+                            regs[arg0] <= user_i;
                         end
 
                         8'b00_1000_??: begin //  IF ARG0 == REGS[0]

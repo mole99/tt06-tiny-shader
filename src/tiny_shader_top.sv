@@ -137,18 +137,16 @@ module tiny_shader_top (
     logic memory_shift;
     logic memory_load;
     
-    localparam NUM_REGS = 4;
+    localparam NUM_REGS = 2;
     localparam REG_SIZE = 8;
     
     // TODO
     logic [NUM_REGS*REG_SIZE-1:0] registers;
     
-    logic [7:0] reg0, reg1, reg2, reg3;
+    logic [7:0] reg0, reg1;
     
     assign reg0 = registers[0*8 +: 8];
     assign reg1 = registers[1*8 +: 8];
-    assign reg2 = registers[2*8 +: 8];
-    assign reg3 = registers[3*8 +: 8];
     
     spi_receiver #(
         .NUM_REGS       (NUM_REGS),
@@ -247,15 +245,15 @@ module tiny_shader_top (
             if (x_subpos == NUM_INSTR-1) begin
                 x_pos <= x_pos + 1;
             end
-            
+
             if (next_vertical_o) begin
                 x_pos <= '0;
-                
+
                 if (y_subpos == NUM_INSTR-1) begin
                     y_pos <= y_pos + 1;
                 end
             end
-            
+
             if (next_frame_o) begin
                 y_pos <= '0;
             end
@@ -278,6 +276,9 @@ module tiny_shader_top (
         
         .x_pos_i    (x_pos),
         .y_pos_i    (y_pos),
+        
+        .time_i     (reg0), // TODO use time
+        .user_i     (reg1),
         
         .rgb_o      (rgb_o)
     );

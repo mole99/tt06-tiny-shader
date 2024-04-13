@@ -1,41 +1,104 @@
 ![](../../workflows/gds/badge.svg) ![](../../workflows/docs/badge.svg) ![](../../workflows/test/badge.svg)
 
-# Tiny Tapeout Verilog Project Template
+# Tiny Shader
 
-- [Read the documentation for project](docs/info.md)
+Modern GPUs use fragment shaders to 
 
-## What is Tiny Tapeout?
 
-TinyTapeout is an educational project that aims to make it easier and cheaper than ever to get your digital designs manufactured on a real chip.
 
-To learn more and get started, visit https://tinytapeout.com.
+Meaning for each pixel a small program is executed to determine the final color.
 
-## Verilog Projects
+## Examples
 
-1. Add your Verilog files to the `src` folder.
-2. Edit the [info.yaml](info.yaml) and update information about your project, paying special attention to the `source_files` and `top_module` properties. If you are upgrading an existing Tiny Tapeout project, check out our [online info.yaml migration tool](https://tinytapeout.github.io/tt-yaml-upgrade-tool/).
-3. Edit [docs/info.md](docs/info.md) and add a description of your project.
-4. Optionally, add a testbench to the `test` folder. See [test/README.md](test/README.md) for more information.
+|Image|Shader|
+|-|-|
+|![default.png](images/default.png)| <pre>GETX R0<br>GETY R1<br>XOR R0 R1<br>SETRGB R0<br>NOP<br>NOP<br>NOP<br>NOP<br>NOP<br>NOP<br>NOP<br>NOP</pre> |
+|![test4.png](images/test4.png)||
 
-The GitHub action will automatically build the ASIC files using [OpenLane](https://www.zerotoasiccourse.com/terminology/openlane/).
+## Architecture
 
-## Enable GitHub actions to build the results page
+Tiny Shader has four (mostly) general purpose registers, REG0 to REG4. REG0 is special in a way as it is the target or destination register for some instructions. All registers are 6 bit wide.
 
-- [Enabling GitHub Pages](https://tinytapeout.com/faq/#my-github-action-is-failing-on-the-pages-part)
+### Input
 
-## Resources
+The shader has four sources to get input from:
 
-- [FAQ](https://tinytapeout.com/faq/)
-- [Digital design lessons](https://tinytapeout.com/digital_design/)
-- [Learn how semiconductors work](https://tinytapeout.com/siliwiz/)
-- [Join the community](https://tinytapeout.com/discord)
-- [Build your design locally](https://docs.google.com/document/d/1aUUZ1jthRpg4QURIIyzlOaPWlmQzr-jBn3wZipVUPt4)
+- `X` - X position of the current pixel
+- `Y` - Y position of the current pixel
+- `TIME` - Increases with the frame number.
+- `USER` - Value that can be set via the SPI interface.
 
-## What next?
+### Output
 
-- [Submit your design to the next shuttle](https://app.tinytapeout.com/).
-- Edit [this README](README.md) and explain your design, how it works, and how to test it.
-- Share your project on your social network of choice:
-  - LinkedIn [#tinytapeout](https://www.linkedin.com/search/results/content/?keywords=%23tinytapeout) [@TinyTapeout](https://www.linkedin.com/company/100708654/)
-  - Mastodon [#tinytapeout](https://chaos.social/tags/tinytapeout) [@matthewvenn](https://chaos.social/@matthewvenn)
-  - X (formerly Twitter) [#tinytapeout](https://twitter.com/hashtag/tinytapeout) [@matthewvenn](https://twitter.com/matthewvenn)
+The goal of the shader is to determine the final output color:
+
+- `RGB` - The output color for the current pixel. Channel R, G and B can be set individually.
+
+### Sine Look Up Table
+
+TODO
+
+
+## Instructions
+
+The following instructions are supported by Tiny Shader. A program consists of 12 (TODO) instructions and is executed for each pixel individually. The actual resolution is therefore less than the VGA resolution.
+
+### Output
+|Instruction|Operation|Description|
+|-----------|---------|-----------|
+|SETRGB REGA|RGB <= REG|Set the output color to the value of the specified register.|
+|SETR REGA|R <= REG[1:0]|Set the red channel of the output color to the lower two bits of the specified register.|
+|SETG REGA|G <= REG[1:0]|Set the green channel of the output color to the lower two bits of the specified register.|
+|SETB REGA|B <= REG[1:0]|Set the blue channel of the output color to the lower two bits of the specified register.|
+### Input
+|Instruction|Operation|Description|
+|-----------|---------|-----------|
+|GETX REGA|REG <= X|Set the specified register to the x position of the current pixel.|
+|GETY REGA|REG <= Y|Set the specified register to the y position of the current pixel.|
+|GETTIME REGA|REG <= TIME|Set the specified register to the current time value, increases with each frame.|
+|GETUSER REGA|REG <= USER|Set the specified register to the user value, can be set via the SPI interface.|
+### Branches
+|Instruction|Operation|Description|
+|-----------|---------|-----------|
+|IFEQ REGA|TAKE <= REG == REG0|Execute the next instruction if REG equals REG0.|
+|IFNE REGA|TAKE <= REG != REG0|Execute the next instruction if REG does not equal REG0.|
+|IFGE REGA|TAKE <= REG >= REG0|Execute the next instruction if REG is greater then or equal REG0.|
+|IFLT REGA|TAKE <= REG < REG0|Execute the next instruction if REG is less than REG0.|
+### TODO
+|Instruction|Operation|Description|
+|-----------|---------|-----------|
+|TODO0 REGA|TODO|TODO.|
+|TODO1 REGA|TODO|TODO.|
+|TODO2 REGA|TODO|TODO.|
+### Special
+|Instruction|Operation|Description|
+|-----------|---------|-----------|
+|SINE REGA|REG <= SINE[REG0[5:2]]|Get the sine value for REG0 and write into REG.|
+### Boolean
+|Instruction|Operation|Description|
+|-----------|---------|-----------|
+|AND REGA, REGB|REGA <= REGA & REGB|Boolean AND of REGA and REGB, result written into REGA.|
+|OR REGA, REGB|REGA <= REGA | REGB|Boolean OR of REGA and REGB, result written into REGA.|
+|NOT REGA, REGB|REGA <= ~REGB|Boolean NOT of REGB, result written into REGA.|
+|XOR REGA, REGB|REGA <= REGA ^ REGB|Boolean XOR of REGA and REGB, result written into REGA.|
+### Move
+|Instruction|Operation|Description|
+|-----------|---------|-----------|
+|MOV REGA, REGB|REGA <= REGB|Move value of REGB into REGA.|
+### Arithmetic
+|Instruction|Operation|Description|
+|-----------|---------|-----------|
+|ADD REGA, REGB|REGA <= REGA + REGB|Add REGA and REGB, result written into REGA.|
+### Shift
+|Instruction|Operation|Description|
+|-----------|---------|-----------|
+|SHIFTL REGA, REGB|REGA <= REGA << REGB|Shift REGA with REGB to the left, result written into REGA.|
+|SHIFTR REGA, REGB|REGA <= REGA >> REGB|Shift REGA with REGB to the right, result written into REGA.|
+### Load
+|Instruction|Operation|Description|
+|-----------|---------|-----------|
+|LDI IMMEDIATE|REGA <= IMMEDIATE|Load an immediate value into REGA.|
+
+## Tiny Tapeout
+
+This project was designed for [Tiny Tapeout](https://tinytapeout.com).
