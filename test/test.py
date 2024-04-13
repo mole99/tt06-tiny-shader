@@ -111,13 +111,11 @@ async def test_vga_default(dut):
     image = await task_draw_frame.join()
     image.save(f"default.png")
     
-    await FallingEdge(dut.vsync)
-    await FallingEdge(dut.hsync)
-    
     # Start thread to draw frame
     task_draw_frame = await cocotb.start(draw_frame(dut))
 
     image2 = await task_draw_frame.join()
+    image2.save(f"default2.png")
 
     # Check that images are not the same
     diff = ImageChops.difference(image.convert('RGB'), image2.convert('RGB'))

@@ -20,7 +20,7 @@ module shader_memory #(
     always_ff @(posedge clk_i, negedge rst_ni) begin
         if (!rst_ni) begin
             `ifdef COCOTB_SIM
-            $readmemb("../sw/binary/test7.bit", memory);
+            $readmemb("../sw/binary/test4.bit", memory);
             `else
             // Load the default program (test4)
             memory[0] <= 8'b00_0100_00; // GETX R0
