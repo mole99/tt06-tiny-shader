@@ -17,38 +17,36 @@ module shader_execute (
     
     output logic [5:0]  rgb_o
 );
-
     localparam NUM_REGS = 4;
 
+    // General purpose registers
     logic [5:0] regs [NUM_REGS];
+    
+    // Sine lookup table
+    logic [5:0] sine_lut [16];
 
-    int i;
+    // Output color
+    logic [5:0] rgb;
     
-    // Decode stage
+    // Skip next instruction
+    logic skip;
     
-    logic dual_arg; // Is this a dual argument instruction?
-    assign dual_arg = instr_i[7];
+    // Decode stage :)
     
+    // Register arguments
     logic [1:0] arg0;
-    logic [1:0] arg1; // valid if dual_arg
+    logic [1:0] arg1;
     
     assign arg0 = instr_i[1:0];
     assign arg1 = instr_i[3:2];
     
-    logic [5:0] imm; // immediate value
+    // Immediate value
+    logic [5:0] imm;
     assign imm = instr_i[5:0];
 
-
-    // TODO
-    logic [5:0] sine_lut [16];
-
-    logic [5:0] rgb;
-
-    logic skip;
-
-    always_ff @(posedge clk_i) begin
+    always_ff @(posedge clk_i, negedge rst_ni) begin
         if (!rst_ni) begin
-            for (i=0; i<NUM_REGS; i++) begin
+            for (int i=0; i<NUM_REGS; i++) begin
                 regs[i] <= '0;
             end
             
@@ -68,7 +66,6 @@ module shader_execute (
             sine_lut[13] <= 6'd61;
             sine_lut[14] <= 6'd62;
             sine_lut[15] <= 6'd63;
-
             
             rgb      <= 6'b000000;
             skip     <= 1'b0;

@@ -272,7 +272,7 @@ module tiny_shader_top (
         .y_pos_i    (y_pos),
         
         .time_i     (cur_time[7:2]),
-        .user_i     (reg0),
+        .user_i     (reg0[5:0]),
         
         .rgb_o      (rgb_o)
     );
