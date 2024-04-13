@@ -15,14 +15,40 @@ Tiny Shader mimics such a shading unit, it executes a shader of 10 instructions 
 
 ### Examples
 
-These images and many more can be generated with Tiny Shader. Note, that using the time input the shaders can even be animated.
+These images and many more can be generated with Tiny Shader. Note, that shaders can even be animated by acessing the user or time register.
 
-|Image|Shader|
-|-|-|
-|![test2.png](images/test2.png)| <pre>GETX R0<br>SINE R1<br>SETR R1<br>GETY R0<br>SINE R1<br>SETG R1</pre> |
-|![test4.png](images/test4.png)| <pre>GETX R0<br>GETY R1<br>XOR R0 R1<br>SETRGB R0</pre> |
-|![test5.png](images/test5.png)| <pre>GETY R1<br>LDI 1<br>AND R1 R0<br>IFNE R1<br>LDI 63<br>IFEQ R1<br>LDI 0<br>SETRGB R0</pre> |
-|![test7.png](images/test7.png)| <pre>CLEAR R3<br>GETX R0<br>GETUSER R1<br>ADD R0 R1<br>SETRGB R0<br>SINE R0<br>HALF R0<br>GETY R1<br>IFGE R1<br>SETRGB R3</pre> |
+|||||
+|-|-|-|-|
+|![test2.png](../images/test2.png)|![test4.png](../images/test4.png)|![test5.png](../images/test5.png)|![test7.png](../images/test7.png)|
+
+The shader for the last image is shown here:
+
+```
+# Shader to display a rainbow colored sine wave
+
+# Clear R3
+CLEAR R3
+
+# Get the sine value for x and add the user value
+GETX R0
+GETUSER R1
+ADD R0 R1
+
+# Set default color to R0
+SETRGB R0
+
+# Get the sine value for R0
+SINE R0
+HALF R0
+
+# Get y coord
+GETY R1
+
+# If the sine value is greater
+# or equal y, set color to black
+IFGE R1
+SETRGB R3
+```
 
 ### Architecture
 
@@ -110,7 +136,7 @@ The following instructions are supported by Tiny Shader. A program consists of 1
 
 ## How to test
 
-First set the clock to 25.175 MHz and reset the design. For a simple test, simply connect a Tiny VGA to the output Pmod. A shader is loaded by default should be displayed via VGA.
+First set the clock to 25.175 MHz and reset the design. For a simple test, simply connect a Tiny VGA to the output Pmod. A shader is loaded by default and an image should be displayed via VGA.
 
 For advanced features, connect an SPI controller to the bidir pmod. If ui[0], the mode signal, is set to 0, you can write to the user register via SPI. Note that only the last 6 bit are used.
 

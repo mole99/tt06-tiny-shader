@@ -2,20 +2,22 @@
 
 # Tiny Shader
 
-Modern GPUs use fragment shaders to determine the color for each pixel. Thousands of shading units run in parallel to execute a program, the fragment shader, to determine the final color for each pixel.
+Modern GPUs use fragment shaders to determine the color for each pixel. Thousands of shading units run in parallel to execute the fragment shader to determine the final color for each pixel.
 
 Tiny Shader mimics such a shading unit, it executes a shader of 10 instructions for each pixel. No framebuffer is used, the color values are generated on the fly. Tiny Shader also offers an SPI interface with which a new shader can be loaded. The final result can be viewed via VGA output.
 
 ## Examples
 
-These images and many more can be generated with Tiny Shader. Note, that using the time input the shaders can even be animated.
+These images and many more can be generated with Tiny Shader. Note, that shaders can even be animated by acessing the user or time register.
 
-|Image|Shader|
-|-|-|
-|![test2.png](images/test2.png)| <pre>GETX R0<br>SINE R1<br>SETR R1<br>GETY R0<br>SINE R1<br>SETG R1</pre> |
-|![test4.png](images/test4.png)| <pre>GETX R0<br>GETY R1<br>XOR R0 R1<br>SETRGB R0</pre> |
-|![test5.png](images/test5.png)| <pre>GETY R1<br>LDI 1<br>AND R1 R0<br>IFNE R1<br>LDI 63<br>IFEQ R1<br>LDI 0<br>SETRGB R0</pre> |
-|![test7.png](images/test7.png)| <pre>CLEAR R3<br>GETX R0<br>GETUSER R1<br>ADD R0 R1<br>SETRGB R0<br>SINE R0<br>HALF R0<br>GETY R1<br>IFGE R1<br>SETRGB R3</pre> |
+|||
+|-|-|-|-|
+|![test2.png](images/test2.png)|![test4.png](images/test4.png)|![test5.png](images/test5.png)|![test7.png](images/test7.png)
+| <pre>GETX R0<br>SINE R1<br>SETR R1<br>GETY R0<br>SINE R1<br>SETG R1</pre> | <pre>GETX R0<br>GETY R1<br>XOR R0 R1<br>SETRGB R0</pre> | <pre>GETY R1<br>LDI 1<br>AND R1 R0<br>IFNE R1<br>LDI 63<br>IFEQ R1<br>LDI 0<br>SETRGB R0</pre> | <pre>CLEAR R3<br>GETX R0<br>GETUSER R1<br>ADD R0 R1<br>SETRGB R0<br>SINE R0<br>HALF R0<br>GETY R1<br>IFGE R1<br>SETRGB R3</pre> |
+
+Here is an animation using the time register:
+
+![animation.gif](/home/leo/Nextcloud/Programmieren/ASIC/tt06-tiny-shader/images/animation.gif)
 
 ## Architecture
 
@@ -27,7 +29,7 @@ The shader has four sources to get input from:
 
 - `X` - X position of the current pixel
 - `Y` - Y position of the current pixel
-- `TIME` - Increases at 7.5 Hz, before it overflow it counts down again.
+- `TIME` - Increments at 7.5 Hz, before it overflow it counts down again.
 - `USER` - Register that can be set via the SPI interface.
 
 ### Output
