@@ -27,6 +27,12 @@ module tiny_shader_top (
 );
 
     /*
+        Tiny Shader Settings
+    */
+    
+    localparam NUM_INSTR = 12;
+
+    /*
         VGA 640x480 @ 60 Hz
         clock = 25.175 MHz
     */
@@ -44,10 +50,6 @@ module tiny_shader_top (
     
     localparam HTOTAL = WIDTH + HFRONT + HSYNC + HBACK;
     localparam VTOTAL = HEIGHT + VFRONT + VSYNC + VBACK;
-    
-    // Downscaling by factor of 8, i.e. one pixel is 8x8
-    localparam WIDTH_SMALL  = WIDTH / 8; // 80
-    localparam HEIGHT_SMALL = HEIGHT / 8; // 60
 
     /*
         Horizontal and Vertical Timing
@@ -122,27 +124,6 @@ module tiny_shader_top (
     end
 
     /*
-        Final Color Composition
-    */
-
-    always_comb begin
-        rrggbb_o = rgb_o;
-        
-        /*if (counter_v == 32) begin
-            rrggbb_o = 6'b001100;
-        end
-        
-        if (counter_h == 32) begin
-            rrggbb_o = 6'b110000;
-        end*/
-        
-        if (hblank || vblank) begin
-            rrggbb_o = '0;
-        end
-    end
-
-
-    /*
         SPI Receiver
         
         cpol       = False,
@@ -185,8 +166,7 @@ module tiny_shader_top (
         
         // Mode signal
         .mode_i         (mode_i),
-        
-        .memory_instr_i (instr),
+
         .memory_instr_o (memory_instr),
         .memory_shift_o (memory_shift),
         .memory_load_o  (memory_load),
@@ -197,30 +177,95 @@ module tiny_shader_top (
 
     // Graphics
 
-    logic [5:0] counter_h_small;
-    logic [5:0] counter_v_small;
-    
-    assign counter_h_small = counter_h[$clog2(HTOTAL)-2 : 3];
-    assign counter_v_small = counter_v[$clog2(HTOTAL)-2 : 3];
-
     logic [7:0] instr;
 
-    logic execute_shader;
-    assign execute_shader = counter_h+8 >= 0 && counter_h+8 < WIDTH 
+    logic execute_shader_x, execute_shader_y;
+    assign execute_shader_x = counter_h+NUM_INSTR >= 0 && counter_h+NUM_INSTR < WIDTH 
                             && counter_v >= 0 && counter_v < HEIGHT;
+                            
+    assign execute_shader_y = counter_v >= 0 && counter_v < HEIGHT;            
+                            
+                            
+    // TODO if started, complete instruction
 
-    shader_memory shader_memory_inst (
+    shader_memory #(
+        .NUM_INSTR (NUM_INSTR)
+    ) shader_memory_inst (
         .clk_i      (clk_i),
         .rst_ni     (rst_ni),
-        .shift_i    (execute_shader || memory_shift),
+        .shift_i    (execute_shader_x || x_subpos > 0 || memory_shift),
         .load_i     (memory_load),
         .instr_i    (memory_instr),
         .instr_o    (instr)
     );
-
-    logic [5:0] x_pos;
-    logic [5:0] y_pos;
-    logic [2:0] substep;
+    
+    // Count subpixel positions
+    logic [$clog2(NUM_INSTR) - 1:0] x_subpos;
+    logic [$clog2(NUM_INSTR) - 1:0] y_subpos;
+    
+    always_ff @(posedge clk_i, negedge rst_ni) begin
+        if (!rst_ni) begin
+            x_subpos = '0;
+            y_subpos = '0;
+        end else begin
+            if (execute_shader_x || x_subpos > 0) begin
+                // X sub position
+                x_subpos <= x_subpos + 1;
+                
+                if (x_subpos == NUM_INSTR-1) begin
+                    x_subpos <= '0;
+                end
+            end
+            
+            if (execute_shader_y) begin
+            
+                // Y sub position
+                if (next_vertical_o) begin
+                    y_subpos <= y_subpos + 1;
+                    
+                    if (y_subpos == NUM_INSTR-1) begin
+                        y_subpos <= '0;
+                    end
+                end
+            
+            end
+        end
+    end
+    
+    // Count x and y positions
+    localparam WIDTH_SMALL = WIDTH / NUM_INSTR;
+    localparam HEIGHT_SMALL = HEIGHT / NUM_INSTR;
+    
+    logic [$clog2(WIDTH_SMALL)  - 1:0] x_pos;
+    logic [$clog2(HEIGHT_SMALL) - 1:0] y_pos;
+    
+    always_ff @(posedge clk_i, negedge rst_ni) begin
+        if (!rst_ni) begin
+            x_pos <= '0;
+            y_pos <= '0;
+        end else begin
+            if (x_subpos == NUM_INSTR-1) begin
+                x_pos <= x_pos + 1;
+            end
+            
+            if (next_vertical_o) begin
+                x_pos <= '0;
+                
+                if (y_subpos == NUM_INSTR-1) begin
+                    y_pos <= y_pos + 1;
+                end
+            end
+            
+            if (next_frame_o) begin
+                y_pos <= '0;
+            end
+        end
+    end
+    
+    
+    /*
+        Shader execution
+    */
     
     logic [5:0] rgb_o;
     logic [5:0] rgb_d;
@@ -229,12 +274,40 @@ module tiny_shader_top (
         .clk_i      (clk_i),
         .rst_ni     (rst_ni),
         .instr_i    (instr),
-        .execute    (execute_shader),
+        .execute    (execute_shader_x),
         
-        .x_pos_i    (counter_h_small+6'd1),// +1
-        .y_pos_i    (counter_v_small),
+        .x_pos_i    (x_pos),
+        .y_pos_i    (y_pos),
         
         .rgb_o      (rgb_o)
     );
+
+    // Capture output color, after shader completed
+    always_ff @(posedge clk_i) begin
+
+        if (x_subpos == NUM_INSTR-1) begin
+            rgb_d <= rgb_o;
+        end
+    end
+    
+    /*
+        Final Color Composition
+    */
+
+    always_comb begin
+        rrggbb_o = rgb_d;
+        
+        /*if (counter_v == 32) begin
+            rrggbb_o = 6'b001100;
+        end
+        
+        if (counter_h == 32) begin
+            rrggbb_o = 6'b110000;
+        end*/
+        
+        if (hblank || vblank) begin
+            rrggbb_o = '0;
+        end
+    end
 
 endmodule

@@ -22,7 +22,6 @@ module spi_receiver #(
     // '1' = data mode
     input  logic       mode_i,
     
-    input  logic [7:0] memory_instr_i,  // current sprite data
     output logic [7:0] memory_instr_o,  // current sprite data
     output logic       memory_shift_o,  // shift pulse
     output logic       memory_load_o,   // shift new data into sprite
@@ -116,10 +115,10 @@ module spi_receiver #(
                 // Write the data depending on the command
                 end else begin
                     case (spi_cmd)
-                        3'd0: registers[0*8 +: 8] <= {registers[0*8 +: 7], spi_mosi_sync};
-                        3'd1: registers[1*8 +: 8] <= {registers[1*8 +: 7], spi_mosi_sync};
-                        3'd2: registers[2*8 +: 8] <= {registers[2*8 +: 7], spi_mosi_sync};
-                        3'd3: registers[3*8 +: 8] <= {registers[3*8 +: 7], spi_mosi_sync};
+                        8'd0: registers[0*8 +: 8] <= {registers[0*8 +: 7], spi_mosi_sync};
+                        8'd1: registers[1*8 +: 8] <= {registers[1*8 +: 7], spi_mosi_sync};
+                        8'd2: registers[2*8 +: 8] <= {registers[2*8 +: 7], spi_mosi_sync};
+                        8'd3: registers[3*8 +: 8] <= {registers[3*8 +: 7], spi_mosi_sync};
                     endcase
                     
                     spi_cnt <= spi_cnt + 1;
@@ -134,18 +133,18 @@ module spi_receiver #(
             if (!spi_cs_sync && spi_sclk_rising) begin
                 if (spi_mode == 1'b1) begin
                     case (spi_cmd)
-                        3'd0: spi_miso_o <= registers[0*8 + 7];
-                        3'd1: spi_miso_o <= registers[1*8 + 7];
-                        3'd2: spi_miso_o <= registers[2*8 + 7];
-                        3'd3: spi_miso_o <= registers[3*8 + 7];
+                        8'd0: spi_miso_o <= registers[0*8 + 7];
+                        8'd1: spi_miso_o <= registers[1*8 + 7];
+                        8'd2: spi_miso_o <= registers[2*8 + 7];
+                        8'd3: spi_miso_o <= registers[3*8 + 7];
                     endcase
                 end
             end
         end
     end
 
+    // Assignments
     assign registers_o = registers;
-
     assign memory_instr_o = spi_cmd;
 
 endmodule

@@ -83,7 +83,7 @@ module shader_execute (
                     
                         // Single arg instructions
                         8'b00_0000_??: begin //  SETRGB RGB <= ARG0[1:0]
-                            rgb <= regs[arg0];
+                            rgb <= regs[arg0]; // TODO nop
                         end
                         8'b00_0001_??: begin //  SETR R <= ARG0[1:0]
                             rgb[5:4] <= regs[arg0][1:0];

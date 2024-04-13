@@ -11,17 +11,20 @@ from cocotb.triggers import Timer, RisingEdge, FallingEdge
 
 from cocotbext.spi import SpiBus, SpiConfig, SpiMaster
 
+# Tiny Shader Settings
+NUM_INSTR = 12
+
 # VGA Parameters
-WIDTH    = 640;
-HEIGHT   = 480;
+WIDTH    = 640
+HEIGHT   = 480
 
-HFRONT   = 16;
-HSYNC    = 96;
-HBACK    = 48;
+HFRONT   = 16
+HSYNC    = 96
+HBACK    = 48
 
-VFRONT   = 10;
-VSYNC    = 2;
-VBACK    = 33;
+VFRONT   = 10
+VSYNC    = 2
+VBACK    = 33
 
 # Reset coroutine
 async def reset_dut(rst_ni, duration_ns):
@@ -199,7 +202,7 @@ async def test_spi_shader(dut):
     dut._log.info("Reset done")
     
     # Send shader instructions
-    shader = [0x12, 0x00, 0xFF, 0x64, 0x42, 0x11, 0x97, 0x0F]
+    shader = [0x42]*NUM_INSTR
     await spi_master.write(shader, burst=True)
 
     # Verify shader was correctly written
@@ -269,7 +272,7 @@ async def test_spi_regs_shader_regs_random(dut):
     dut.mode.value = 1 # data mode
     
     # Send shader instructions
-    shader = [random.randint(0, 255) for i in range(8)]
+    shader = [random.randint(0, 255) for i in range(NUM_INSTR)]
     await spi_master.write(shader, burst=True)
 
     # Verify shader was correctly written

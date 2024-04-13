@@ -13,7 +13,7 @@ module shader_memory #(
     input  logic [7:0]  instr_i,
     output logic [7:0]  instr_o
 );
-    logic [7:0] memory [NUM_INSTR];
+    logic [7:0] memory [NUM_INSTR]; // TODO load with nop
     int i;
 
     // Initialize the memory on reset 
@@ -32,6 +32,8 @@ module shader_memory #(
             memory[5] <= 8'b01_11_00_00; // XOR R0 R0
             memory[6] <= 8'b01_11_00_00; // XOR R0 R0
             memory[7] <= 8'b01_11_00_00; // XOR R0 R0
+            memory[8] <= 8'b01_11_00_00; // XOR R0 R0
+            memory[9] <= 8'b01_11_00_00; // XOR R0 R0
             `endif
         end else begin
             if (shift_i) begin
