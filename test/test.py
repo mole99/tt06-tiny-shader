@@ -83,7 +83,7 @@ async def draw_frame(dut):
         else:
             screen_x += 1
 
-#@cocotb.test()
+@cocotb.test()
 async def test_vga_default(dut):
     """Draw one frame with the default shader"""
 
@@ -116,9 +116,10 @@ def load_shader(shader_name):
     
     with open(f'../sw/binary/{shader_name}.bit') as f:
         for line in f.readlines():
-            line = line.replace('_', '')
             if '//' in line:
                 line = line.split('//')[0]
+            line = line.replace('_', '')
+            line.strip()
             if line:
                 shader.append(int(line, 2))
     
@@ -172,6 +173,17 @@ async def test_vga_load(dut, shader_name='test7'):
 
     image = await taks_draw_frame.join()
     image.save(f"{shader_name}.png")
+    
+    gold = Image.open(f'../sw/images/{shader_name}.png')
+    
+    # Scale with factor
+    gold = gold.resize((gold.width*NUM_INSTR, gold.height*NUM_INSTR), Image.NEAREST)
+    
+    gold.save(f"{shader_name}_gold.png")
+    
+    # Check that images are the same
+    diff = ImageChops.difference(image.convert('RGB'), gold.convert('RGB'))
+    assert(not diff.getbbox())
 
     await ClockCycles(dut.clk, 10)
 
