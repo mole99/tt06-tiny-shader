@@ -3,7 +3,7 @@ project:
   title:        "Tiny Shader"      # Project title
   author:       "Leo Moser"      # Your name
   discord:      "mole99"      # Your discord username, for communication and automatically assigning you a Tapeout role (optional)
-  description:  "Tiny Shader allows you to write a small programm of 8 instructions that is executed for each pixel independently on an 80x60 screen."      # One line description of what your project does
+  description:  "With Tiny Shader you can write a small program to create different images and even animations."      # One line description of what your project does
   language:     "SystemVerilog" # other examples include SystemVerilog, Amaranth, VHDL, etc
   clock_hz:     25175000       # Clock frequency in Hz (or 0 if not applicable)
 
@@ -26,7 +26,7 @@ project:
 # The pinout of your project. Leave unused pins blank. DO NOT delete or add any pins.
 pinout:
   # Inputs
-  ui[0]: ""
+  ui[0]: "mode"
   ui[1]: ""
   ui[2]: ""
   ui[3]: ""
@@ -46,10 +46,10 @@ pinout:
   uo[7]: "hsync"
 
   # Bidirectional pins
-  uio[0]: ""
-  uio[1]: ""
-  uio[2]: ""
-  uio[3]: ""
+  uio[0]: "CS"
+  uio[1]: "MOSI"
+  uio[2]: "MISO"
+  uio[3]: "SCK"
   uio[4]: ""
   uio[5]: ""
   uio[6]: ""

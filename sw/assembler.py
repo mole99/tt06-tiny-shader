@@ -28,8 +28,8 @@ instructions = {
     # Boolean operations
     'AND' : {'format': 'dual_operand', 'opcode': '01_00', 'short': 'RA <= RA & RB', 'description': 'Boolean AND of RA and RB, result written into RA.', 'category': 'Boolean'},
     'OR'  : {'format': 'dual_operand', 'opcode': '01_01', 'short': 'RA <= RA | RB', 'description': 'Boolean OR of RA and RB, result written into RA.', 'category': 'Boolean'},
-    'NOT' : {'format': 'dual_operand', 'opcode': '01_10', 'short': 'RA <= ~RB', 'description': 'Boolean NOT of RB, result written into RA.', 'category': 'Boolean'},
-    'XOR' : {'format': 'dual_operand', 'opcode': '01_11', 'short': 'RA <= RA ^ RB', 'description': 'Boolean XOR of RA and RB, result written into RA.', 'category': 'Boolean'},
+    'NOT' : {'format': 'dual_operand', 'opcode': '01_10', 'short': 'RA <= ~RB', 'description': 'Invert all bits of RB, result written into RA.', 'category': 'Boolean'},
+    'XOR' : {'format': 'dual_operand', 'opcode': '01_11', 'short': 'RA <= RA ^ RB', 'description': 'XOR of RA and RB, result written into RA.', 'category': 'Boolean'},
 
     # Various
     'MOV' : {'format': 'dual_operand', 'opcode': '10_00', 'short': 'RA <= RB', 'description': 'Move value of RB into RA.', 'category': 'Move'},
