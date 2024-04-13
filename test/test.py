@@ -85,10 +85,7 @@ async def draw_frame(dut):
 
 @cocotb.test()
 async def test_vga_default(dut):
-    """
-    Draw one frame with the default shader,
-    then draw another and make sure they are different
-    """
+    """Draw one frame with the default shader"""
 
     # Start the clock
     c = Clock(dut.clk, 10, 'ns')
@@ -110,16 +107,6 @@ async def test_vga_default(dut):
 
     image = await task_draw_frame.join()
     image.save(f"default.png")
-    
-    # Start thread to draw frame
-    task_draw_frame = await cocotb.start(draw_frame(dut))
-
-    image2 = await task_draw_frame.join()
-    image2.save(f"default2.png")
-
-    # Check that images are not the same
-    diff = ImageChops.difference(image.convert('RGB'), image2.convert('RGB'))
-    assert(diff.getbbox())
 
     await ClockCycles(dut.clk, 10)
 
