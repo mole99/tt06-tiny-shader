@@ -2,9 +2,9 @@
 
 # Tiny Shader
 
-Modern GPUs use fragment shaders to determine the color for each pixel. Thousands of shading units run in parallel to execute the fragment shader to determine the final color for each pixel.
+Modern GPUs use fragment shaders to determine the final color for each pixel. Thousands of shading units run in parallel to speed up this process and ensure that a high FPS ratio can be achieved.
 
-Tiny Shader mimics such a shading unit, it executes a shader of 10 instructions for each pixel. No framebuffer is used, the color values are generated on the fly. Tiny Shader also offers an SPI interface with which a new shader can be loaded. The final result can be viewed via VGA output.
+Tiny Shader mimics such a shading unit and executes a shader with 10 instructions for each pixel. No framebuffer is used, the color values are generated on the fly. Tiny Shader also offers an SPI interface via which a new shader can be loaded. The final result can be viewed via the VGA output at 640x480 @ 60 Hz, although at an internal resolution of 64x48 pixel.
 
 ## Examples
 
