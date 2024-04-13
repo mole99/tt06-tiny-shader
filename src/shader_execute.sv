@@ -79,29 +79,29 @@ module shader_execute (
                     casez (instr_i)
                     
                         // Single arg instructions
-                        8'b00_0000_??: begin //  SETRGB RGB <= ARG0[1:0]
-                            rgb <= regs[arg0]; // TODO nop
+                        8'b00_0000_??: begin //  SETRGB RGB
+                            rgb <= regs[arg0];
                         end
-                        8'b00_0001_??: begin //  SETR R <= ARG0[1:0]
+                        8'b00_0001_??: begin //  SETR R
                             rgb[5:4] <= regs[arg0][1:0];
                         end
-                        8'b00_0010_??: begin //  SETG G <= ARG0[1:0]
+                        8'b00_0010_??: begin //  SETG G
                             rgb[3:2] <= regs[arg0][1:0];
                         end
-                        8'b00_0011_??: begin //  SETB B <= ARG0[1:0]
+                        8'b00_0011_??: begin //  SETB B
                             rgb[1:0] <= regs[arg0][1:0];
                         end
                         
-                        8'b00_0100_??: begin //  GETX ARG0 <= X
+                        8'b00_0100_??: begin //  GETX
                             regs[arg0] <= x_pos_i;
                         end
-                        8'b00_0101_??: begin //  GETY ARG0 <= Y
+                        8'b00_0101_??: begin //  GETY
                             regs[arg0] <= y_pos_i;
                         end
-                        8'b00_0110_??: begin //  GETTIME ARG0 <= TIME
+                        8'b00_0110_??: begin //  GETTIME
                             regs[arg0] <= time_i;
                         end
-                        8'b00_0111_??: begin //  GETUSER ARG0 <= USER
+                        8'b00_0111_??: begin //  GETUSER
                             regs[arg0] <= user_i;
                         end
 
@@ -118,54 +118,54 @@ module shader_execute (
                             skip <= !(regs[arg0] < regs[0]);
                         end
 
-                        8'b00_1100_??: begin // *2
+                        8'b00_1100_??: begin // DOUBLE
                             regs[arg0] <= regs[arg0] << 1;
                         end
-                        8'b00_1101_??: begin // /2 
+                        8'b00_1101_??: begin // HALF
                             regs[arg0] <= regs[arg0] >> 1;
                         end
-                        8'b00_1110_??: begin // CLEAR RA
+                        8'b00_1110_??: begin // CLEAR
                             regs[arg0] <= 6'b0;
                         end
-                        8'b00_1111_??: begin // SINE ARG0 <= SINE_LUT[REGS[0]]
+                        8'b00_1111_??: begin // SINE
                             // Mirror the sine wave
                             if (regs[0][4] == 1'b0) begin
-                                regs[arg0] <= sine_lut[regs[0][3:0]]; // TODO
+                                regs[arg0] <= sine_lut[regs[0][3:0]];
                             end else begin
-                                regs[arg0] <= sine_lut[4'd15 - regs[0][3:0]]; // TODO
+                                regs[arg0] <= sine_lut[4'd15 - regs[0][3:0]];
                             end
                         end
                         
                         // Dual arg instructions 01 - Logical
-                        8'b01_00_??_??: begin // AND ARG0 <= ARG0 & ARG1
+                        8'b01_00_??_??: begin // AND
                             regs[arg0] <= regs[arg0] & regs[arg1];
                         end
-                        8'b01_01_??_??: begin // OR ARG0 <= ARG0 | ARG1
+                        8'b01_01_??_??: begin // OR
                             regs[arg0] <= regs[arg0] | regs[arg1];
                         end
-                        8'b01_10_??_??: begin // NOT ARG0 <= ~ARG1
+                        8'b01_10_??_??: begin // NOT
                             regs[arg0] <= ~regs[arg1];
                         end
-                        8'b01_11_??_??: begin // XOR ARG0 <= ARG0 ^ ARG1 
+                        8'b01_11_??_??: begin // XOR
                             regs[arg0] <= regs[arg0] ^ regs[arg1];
                         end
                         
                         // Dual arg instructions 10
-                        8'b10_00_??_??: begin // MOV ARG0 <= ARG1
+                        8'b10_00_??_??: begin // MOV
                             regs[arg0] <= regs[arg1];
                         end
-                        8'b10_01_??_??: begin // ADD ARG0 <= ARG0 + ARG1
+                        8'b10_01_??_??: begin // ADD
                             regs[arg0] <= regs[arg0] + regs[arg1];
                         end
-                        8'b10_10_??_??: begin // SHIFTL ARG0 <= ARG0 << ARG1
+                        8'b10_10_??_??: begin // SHIFTL
                             regs[arg0] <= regs[arg0] << regs[arg1];
                         end
-                        8'b10_11_??_??: begin // SHIFTR ARG0 <= ARG0 >> ARG1
+                        8'b10_11_??_??: begin // SHIFTR
                             regs[arg0] <= regs[arg0] >> regs[arg1];
                         end
                         
                         // Load immediate 11
-                        8'b11_??????: begin // LDI REGS[0] <= IMM
+                        8'b11_??????: begin // LDI
                             regs[0] <= imm;
                         end
 

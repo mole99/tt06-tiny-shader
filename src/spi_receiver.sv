@@ -94,14 +94,13 @@ module spi_receiver #(
         
             if (!spi_cs_sync && spi_sclk_falling) begin
                 // Read the command
-
                 spi_cmd <= {spi_cmd[6:0], spi_mosi_sync};
                 spi_cnt <= spi_cnt + 1;
                 
                 if (spi_cnt == 7) begin
                     if (mode_i == 0) begin
                         // Read the command
-                        user <= {spi_cmd[6:0], spi_mosi_sync};
+                        user <= {spi_cmd[4:0], spi_mosi_sync};
                     end else begin
                         memory_shift_o <= 1'b1;
                         memory_load_o  <= 1'b1;
