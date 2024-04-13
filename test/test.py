@@ -85,7 +85,10 @@ async def draw_frame(dut):
 
 @cocotb.test()
 async def test_vga_default(dut):
-    """Draw one frame with the default shader"""
+    """
+    Draw one frame with the default shader,
+    then draw another and make sure they are different
+    """
 
     # Start the clock
     c = Clock(dut.clk, 10, 'ns')
@@ -103,10 +106,22 @@ async def test_vga_default(dut):
     await FallingEdge(dut.hsync)
     
     # Start thread to draw frame
-    taks_draw_frame = await cocotb.start(draw_frame(dut))
+    task_draw_frame = await cocotb.start(draw_frame(dut))
 
-    image = await taks_draw_frame.join()
+    image = await task_draw_frame.join()
     image.save(f"default.png")
+    
+    await FallingEdge(dut.vsync)
+    await FallingEdge(dut.hsync)
+    
+    # Start thread to draw frame
+    task_draw_frame = await cocotb.start(draw_frame(dut))
+
+    image2 = await task_draw_frame.join()
+
+    # Check that images are not the same
+    diff = ImageChops.difference(image.convert('RGB'), image2.convert('RGB'))
+    assert(diff.getbbox())
 
     await ClockCycles(dut.clk, 10)
 
@@ -169,9 +184,9 @@ async def test_vga_load(dut, shader_name='test7'):
     await FallingEdge(dut.hsync)
     
     # Start thread to draw frame
-    taks_draw_frame = await cocotb.start(draw_frame(dut))
+    task_draw_frame = await cocotb.start(draw_frame(dut))
 
-    image = await taks_draw_frame.join()
+    image = await task_draw_frame.join()
     image.save(f"{shader_name}.png")
     
     gold = Image.open(f'../sw/images/{shader_name}.png')
