@@ -1,11 +1,12 @@
 # Sine
 
-# Load color white
-LDI 63
-MOV R3 R0
+# Clear R3
+CLEAR R3
 
 # Get sine value depending on x
 GETX R0
+GETUSER R1
+ADD R0 R1
 
 # Set color to x
 SETRGB R0
@@ -18,6 +19,6 @@ HALF R0
 GETY R1
 
 # If sine value is greater than y
-# set color to white
+# set color to black
 IFGE R1
 SETRGB R3

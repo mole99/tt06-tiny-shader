@@ -23,14 +23,14 @@ instructions = {
     'DOUBLE' : {'format': 'single_operand', 'opcode': '00_1100', 'short': 'RA <= RA * 2', 'description': 'Double the value of RA.', 'category': 'Arithmetic'},
     'HALF' : {'format': 'single_operand', 'opcode': '00_1101', 'short': 'RA <= RA / 2', 'description': 'Half the value of RA.', 'category': 'Arithmetic'},
     'CLEAR' : {'format': 'single_operand', 'opcode': '00_1110', 'short': 'RA <= 0', 'description': 'Clear RA by writing 0.', 'category': 'Load'},
-    'SINE' : {'format': 'single_operand', 'opcode': '00_1111', 'short': 'RA <= SINE[REG0[5:2]] TODO', 'description': 'Get the sine value for REG0 and write into RA.', 'category': 'Special'},
+    'SINE' : {'format': 'single_operand', 'opcode': '00_1111', 'short': 'RA <= SINE[REG0[4:0]]', 'description': 'Get the sine value for REG0 and write into RA. The sine value LUT has 32 entries.', 'category': 'Special'},
     
     # Boolean operations
     'AND' : {'format': 'dual_operand', 'opcode': '01_00', 'short': 'RA <= RA & RB', 'description': 'Boolean AND of RA and RB, result written into RA.', 'category': 'Boolean'},
     'OR'  : {'format': 'dual_operand', 'opcode': '01_01', 'short': 'RA <= RA | RB', 'description': 'Boolean OR of RA and RB, result written into RA.', 'category': 'Boolean'},
     'NOT' : {'format': 'dual_operand', 'opcode': '01_10', 'short': 'RA <= ~RB', 'description': 'Boolean NOT of RB, result written into RA.', 'category': 'Boolean'},
     'XOR' : {'format': 'dual_operand', 'opcode': '01_11', 'short': 'RA <= RA ^ RB', 'description': 'Boolean XOR of RA and RB, result written into RA.', 'category': 'Boolean'},
-    
+
     # Various
     'MOV' : {'format': 'dual_operand', 'opcode': '10_00', 'short': 'RA <= RB', 'description': 'Move value of RB into RA.', 'category': 'Move'},
     'ADD' : {'format': 'dual_operand', 'opcode': '10_01', 'short': 'RA <= RA + RB', 'description': 'Add RA and RB, result written into RA.', 'category': 'Arithmetic'},
@@ -76,8 +76,11 @@ def summary():
         print(f'|-----------|---------|-----------|')
         
         for name, instruction in category.items():
+
+            short = instruction["short"].replace("|", "\|")
+            description = instruction["description"].replace("|", "\|")
         
-            print(f'|{name} {get_operands(instruction["format"])}|{instruction["short"]}|{instruction["description"]}|')
+            print(f'|{name} {get_operands(instruction["format"])}|{short}|{description}|')
 
 def get_register(string):
     if string[0] != 'R':
@@ -113,7 +116,7 @@ def assemble(program, verbose=False):
             elif instr['format'] == 'immediate':
                 if (len(token) != 2):
                     print(f'Instruction {token[0]} expects one immediate')
-                imm = int(token[1])
+                imm = int(token[1], 0)
                 assembled.append(f'{instr["opcode"]}_{imm:06b} // {line}')
 
             elif instr['format'] == 'dual_operand':
@@ -141,7 +144,7 @@ def assemble(program, verbose=False):
 
     return assembled
 
-def simulate(program, x_pos=0, y_pos=0, cur_time=0, user=0, verbose=False):
+def simulate(program, x_pos=0, y_pos=0, time=0, user=0, verbose=False):
     """Simulate the shader program"""
 
     register = [0, 0, 0, 0]
@@ -173,7 +176,7 @@ def simulate(program, x_pos=0, y_pos=0, cur_time=0, user=0, verbose=False):
             if instr['format'] == 'immediate':
                 if (len(token) != 2):
                     print(f'Instruction {token[0]} expects one immediate')
-                imm = int(token[1])
+                imm = int(token[1], 0)
                 
                 if imm < 0 or imm > 0x3F:
                     print('Warning: immediate out of range')
@@ -228,7 +231,7 @@ def simulate(program, x_pos=0, y_pos=0, cur_time=0, user=0, verbose=False):
                 if token[0] == 'GETY':
                     register[op0] = y_pos & 0x3F
                 if token[0] == 'GETTIME':
-                    register[op0] = cur_time & 0x3F
+                    register[op0] = time & 0x3F
                 if token[0] == 'GETUSER':
                     register[op0] = user & 0x3F
 
@@ -317,7 +320,7 @@ def main():
         
         for y_pos in range(HEIGHT):
             for x_pos in range(WIDTH):
-                rgb = simulate(shader, x_pos, y_pos, verbose=args.verbose)
+                rgb = simulate(shader, x_pos, y_pos, time=0, user=42, verbose=args.verbose)
                 
                 if args.verbose:
                     #print(rgb)
@@ -343,7 +346,6 @@ def main():
     assembled = assemble(shader, args.verbose)
     
     # Fill up with nops
-    
     while len(assembled) < NUM_INSTR:
         assembled.append('01_00_00_00 // NOP')
     
