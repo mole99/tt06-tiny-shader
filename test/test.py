@@ -27,12 +27,22 @@ VFRONT   = 10
 VSYNC    = 2
 VBACK    = 33
 
+POLARITY = 0
+
 # Reset coroutine
 async def reset_dut(rst_ni, duration_ns):
     rst_ni.value = 0
     await Timer(duration_ns, units="ns")
     rst_ni.value = 1
     rst_ni._log.debug("Reset complete")
+
+async def sync_frame(dut):
+    if POLARITY:
+        await FallingEdge(dut.vsync)
+        await FallingEdge(dut.hsync)
+    else:
+        await RisingEdge(dut.vsync)
+        await RisingEdge(dut.hsync)
 
 # Draw the current frame and return it
 async def draw_frame(dut):
@@ -67,8 +77,12 @@ async def draw_frame(dut):
             pixels[screen_x, screen_y] = (r, g, b)
         
         # Received hsync
-        if (dut.hsync.value == 1):
-            await FallingEdge(dut.hsync)
+        if (dut.hsync.value == POLARITY):
+            if POLARITY:
+                await FallingEdge(dut.hsync)
+            else:
+                await RisingEdge(dut.hsync)
+
             screen_y += 1
             #print(dut.timing_hor.counter.value.integer)
             #print(dut.timing_ver.counter.value.integer)
@@ -76,16 +90,20 @@ async def draw_frame(dut):
             screen_x = -HBACK
 
         # Received vsync
-        elif (dut.vsync.value == 1):
-            await FallingEdge(dut.vsync)
-            await FallingEdge(dut.hsync)
+        elif (dut.vsync.value == POLARITY):
+            if POLARITY:
+                await FallingEdge(dut.vsync)
+                await FallingEdge(dut.hsync)
+            else:
+                await RisingEdge(dut.vsync)
+                await RisingEdge(dut.hsync)
             return image
         else:
             screen_x += 1
 
 @cocotb.test()
 async def test_vga_default(dut):
-    """Draw one frame with the default shader"""
+    """Draw two frames with the default shader"""
 
     # Start the clock
     c = Clock(dut.clk, 10, 'ns')
@@ -99,14 +117,20 @@ async def test_vga_default(dut):
     await reset_dut(dut.rst_n, 50)
     dut._log.info("Reset done")
     
-    await FallingEdge(dut.vsync)
-    await FallingEdge(dut.hsync)
+    # Sync to start of frame
+    await sync_frame(dut)
     
     # Start thread to draw frame
     task_draw_frame = await cocotb.start(draw_frame(dut))
 
     image = await task_draw_frame.join()
     image.save(f"default.png")
+    
+    # Start thread to draw frame
+    task_draw_frame = await cocotb.start(draw_frame(dut))
+
+    image = await task_draw_frame.join()
+    image.save(f"default2.png")
 
     await ClockCycles(dut.clk, 10)
 
@@ -165,8 +189,8 @@ async def test_vga_load(dut, shader_name='test7'):
     # Send new shader instructions
     await spi_master.write(shader, burst=True)
     
-    await FallingEdge(dut.vsync)
-    await FallingEdge(dut.hsync)
+    # Sync to start of frame
+    await sync_frame(dut)
     
     # Start thread to draw frame
     task_draw_frame = await cocotb.start(draw_frame(dut))

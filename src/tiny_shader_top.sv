@@ -68,7 +68,7 @@ module tiny_shader_top (
         .SYNC_PULSE     (HSYNC),
         .BACK_PORCH     (HBACK),
         .TOTAL          (HTOTAL),
-        .POLARITY       (1)
+        .POLARITY       (1'b0)
     ) timing_hor (
         .clk        (clk_i),
         .enable     (1'b1),
@@ -87,7 +87,7 @@ module tiny_shader_top (
         .SYNC_PULSE     (VSYNC),
         .BACK_PORCH     (VBACK),
         .TOTAL          (VTOTAL),
-        .POLARITY       (1)
+        .POLARITY       (1'b0)
     ) timing_ver (
         .clk        (clk_i),
         .enable     (next_vertical),

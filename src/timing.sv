@@ -23,8 +23,13 @@ module timing #(
 
     // Signal to trigger next counter in the chain
     assign next = counter >= RESOLUTION - 1 && enable;
-    assign sync  = POLARITY ? (counter >= -SYNC_PULSE - BACK_PORCH) && (counter < -BACK_PORCH) :
-                             ~(counter >= -SYNC_PULSE - BACK_PORCH) && (counter < -BACK_PORCH);
+    
+    // Create the sync signal
+    logic sync_tmp;
+    assign sync_tmp = (counter >= -SYNC_PULSE - BACK_PORCH) && (counter < -BACK_PORCH);
+    assign sync = POLARITY ? sync_tmp : ~sync_tmp;
+
+    // Blanking
     assign blank = (counter >= -FRONT_PORCH - SYNC_PULSE - BACK_PORCH) && (counter < 0);
 
     // Counter logic
