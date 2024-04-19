@@ -23,7 +23,11 @@ module tiny_shader_top (
     output logic       hsync_o,
     output logic       vsync_o,
     output logic       next_vertical_o,
-    output logic       next_frame_o
+    output logic       next_frame_o,
+    
+    // Debug signals
+    output logic [1:0] debug_i,
+    output logic [1:0] debug_o
 );
 
     /* Tiny Shader Settings */
@@ -304,5 +308,15 @@ module tiny_shader_top (
         next_frame_o    <= next_frame;
     end
 
+    /* Debug */
+    
+    always_comb begin
+        case (debug_i)
+            2'b00: debug_o = {cur_time[1], cur_time[0]};
+            2'b01: debug_o = {cur_time[8], cur_time[7]};
+            2'b10: debug_o = {execute_shader_x, execute_shader_y};
+            2'b11: debug_o = {memory_shift, memory_load};
+        endcase
+    end
 
 endmodule

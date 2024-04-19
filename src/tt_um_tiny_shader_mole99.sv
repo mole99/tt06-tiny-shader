@@ -20,18 +20,21 @@ module tt_um_tiny_shader_mole99 (
         rst_n_sync <= rst_n;
     end
     
-    logic [5:0] rrggbb;
-    logic hsync;
-    logic vsync;
-    logic next_vertical;
-    logic next_frame;
-    
     logic spi_sclk;
     logic spi_mosi;
     logic spi_miso;
     logic spi_cs;
     
     logic mode;
+    
+    logic [5:0] rrggbb;
+    logic hsync;
+    logic vsync;
+    logic next_vertical;
+    logic next_frame;
+    
+    logic [1:0] debug_i;
+    logic [1:0] debug_o;
     
     tiny_shader_top #(
     
@@ -53,7 +56,11 @@ module tt_um_tiny_shader_mole99 (
         .hsync_o          (hsync),
         .vsync_o          (vsync),
         .next_vertical_o  (next_vertical),
-        .next_frame_o     (next_frame)
+        .next_frame_o     (next_frame),
+        
+        // Debug signals
+        .debug_i (debug_i),
+        .debug_o (debug_o)
     );
 
     logic [1:0] R;
@@ -84,16 +91,17 @@ module tt_um_tiny_shader_mole99 (
     assign spi_sclk   = uio_in[3];  assign uio_oe[3] = 1'b0; assign uio_out[3] = 1'b0;
 
     // Bottom row
-    assign uio_out[4] = 1'b0; assign uio_oe[4] = 1'b0;
-    assign uio_out[5] = 1'b0; assign uio_oe[5] = 1'b0;
-    assign uio_out[6] = 1'b0; assign uio_oe[6] = 1'b0;
-    assign uio_out[7] = 1'b0; assign uio_oe[7] = 1'b0;
+    assign uio_out[4] = next_vertical; assign uio_oe[4] = 1'b1;
+    assign uio_out[5] = next_frame; assign uio_oe[5] = 1'b1;
+    assign uio_out[6] = debug_o[0]; assign uio_oe[6] = 1'b0;
+    assign uio_out[7] = debug_o[1]; assign uio_oe[7] = 1'b0;
 
     // Input PMOD - mode
     
     assign mode = ui_in[0];
-    /*ui_in[1]
-    ui_in[2]
+    assign debug_i[0] = ui_in[1];
+    assign debug_i[1] = ui_in[2];
+    /*
     ui_in[3]
     ui_in[4]
     ui_in[5]
