@@ -26,7 +26,7 @@ module tiny_shader_top (
     output logic       next_frame_o,
     
     // Debug signals
-    output logic [1:0] debug_i,
+    input  logic [1:0] debug_i,
     output logic [1:0] debug_o
 );
 
