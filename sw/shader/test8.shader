@@ -1,19 +1,21 @@
-# Colored Circles
+# Draw a rectified sine wave
 
-# Sine value of X+Time in R2
-GETX R0
-GETTIME R1
-ADD R0 R1
-SINE R2
+CLEAR R3
 
-# Sine value of Y+Time in R0
+# Get Y coord (and add time)
 GETY R0
 GETTIME R1
 ADD R0 R1
-SINE R0
 
-# Add the colors up
-ADD R0 R2
-
-# Output
+# Set color to Y
 SETRGB R0
+
+# Get sine value for Y and halve it
+SINE R0
+HALF R0
+
+# If sine value is greater than X
+# clear color to black
+GETX R1
+IFGE R1
+SETRGB R3

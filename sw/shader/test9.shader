@@ -1,4 +1,4 @@
-# Sine
+# Colored Circles (morphing)
 
 # Sine value of X in R2
 GETX R0

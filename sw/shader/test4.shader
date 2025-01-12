@@ -1,4 +1,5 @@
 # Xor both coordinates and write to rgb
+# Add the time for an animation
 
 GETX R0
 GETY R1

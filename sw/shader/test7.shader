@@ -1,24 +1,21 @@
-# Sine
+# Draw a rectified sine wave
 
-# Clear R3
 CLEAR R3
 
-# Get sine value depending on x
+# Get X coord (and add time)
 GETX R0
-GETUSER R1
+GETTIME R1
 ADD R0 R1
 
-# Set color to x
+# Set color to X
 SETRGB R0
 
-# Get sine value and half it
+# Get sine value for X and halve it
 SINE R0
 HALF R0
 
-# Get y
+# If sine value is greater than Y
+# clear color to black
 GETY R1
-
-# If sine value is greater than y
-# set color to black
 IFGE R1
 SETRGB R3
