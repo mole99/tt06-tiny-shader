@@ -84,7 +84,7 @@ The following instructions are supported by Tiny Shader. A program consists of 1
 |Instruction|Operation|Description|
 |-----------|---------|-----------|
 |CLEAR RA|RA <= 0|Clear RA by writing 0.|
-|LDI IMMEDIATE|RA <= IMMEDIATE|Load an immediate value into RA.|
+|LDI IMMEDIATE|R0 <= IMMEDIATE|Load an immediate value into R0.|
 ### Special
 |Instruction|Operation|Description|
 |-----------|---------|-----------|
